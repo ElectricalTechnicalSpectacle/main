@@ -50,7 +50,11 @@ def main(argc, argv):
 			data = device.read(endpoint.bEndpointAddress, endpoint.wMaxPacketSize, 0)
 			print data
 		except usb.core.USBError as e:
-			raise ValueError("Couldn't Read From Device: %s" % str(e))
+			if str(e) == "[Errno 110] Operation timed out":
+				print "Timed Out"
+				continue
+			else:
+				raise ValueError("Couldn't Read From Device: %s" % str(e))
 		except KeyboardInterrupt:
 			print "\nProgram Killed"
 			sys.exit()
