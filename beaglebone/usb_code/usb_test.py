@@ -5,15 +5,42 @@
 #
 # Program to test use of USB with PyUSB
 #
+# Data key for wired mouse:
+# 
+# |       0       |    1     |    2     |    3     |       4       | 5 |
+# | button clicks | movement | movement | movement | wheel scrolls | ? |
+#
+
 
 import sys
 import usb.core
 
+def process_raw(arg):
+	#clear flags
+	no_click = left_click = right_click = middle_click = back_click = forward_click = multi_click = False
+
+	print arg[0]
+
+	#set flags for clicks
+	if int(arg[0]) == 0:
+		no_click = True
+	elif int(arg[0]) == 1:
+		left_click = True
+	elif int(arg[0]) == 2:
+		right_click = True
+	elif int(arg[0]) == 4:
+		middle_click = True
+	elif int(arg[0]) == 8:
+		back_click = True
+	elif int(arg[0]) == 16:
+		forward_click = True
+	else:
+		multi_click = True
+
+
 
 def main(argc, argv):
 	#variables
-	#vendor_id=0x046d	#wireless mouse dongle
-	#product_id=0xc52b	#wireless mouse dongle
 	vendor_id=0x046d	#wired mouse
 	product_id=0xc06d	#wired mouse
 
@@ -28,7 +55,6 @@ def main(argc, argv):
 	endpoint = device[0][(0,0)][0]
 
 	#check driver status
-	#print device.is_kernel_driver_active(0)
 	if device.is_kernel_driver_active(0):
 		try:
 			device.detach_kernel_driver(0)
@@ -48,7 +74,7 @@ def main(argc, argv):
 	while True:
 		try:
 			data = device.read(endpoint.bEndpointAddress, endpoint.wMaxPacketSize, 0)
-			print data
+			process_raw(data)
 		except usb.core.USBError as e:
 			if str(e) == "[Errno 110] Operation timed out":
 				print "Timed Out"
