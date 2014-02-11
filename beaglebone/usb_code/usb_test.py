@@ -21,22 +21,35 @@ def process_raw(arg):
 
 	print arg[0]
 
-	#set flags for clicks
+	#Click handling
 	if int(arg[0]) == 0:
-		no_click = True
+		click_string = "                  "
 	elif int(arg[0]) == 1:
-		left_click = True
+		click_string = "Left Click        "
 	elif int(arg[0]) == 2:
-		right_click = True
+		click_string = "Right Click       "
 	elif int(arg[0]) == 4:
-		middle_click = True
+		click_string = "Middle Click      "
 	elif int(arg[0]) == 8:
-		back_click = True
+		click_string = "Back Click        "
 	elif int(arg[0]) == 16:
-		forward_click = True
+		click_string = "Forward Click     "
 	else:
-		multi_click = True
+		click_string = "Multiple Clicks   "
 
+	#Scroll wheel handling
+	if int(arg[4]) == 0:
+		scroll_string = "              "
+	elif int(arg[4]) == 1:
+		scroll_string = "Scroll Down   "
+	elif int(arg[4]) == 255:
+		scroll_string = "Scroll Up     "
+
+	#Movement Handling
+	if (int(arg[1]) == 0) && (int(arg[2]) == 0) && (int(arg[3]) == 0):
+		move_string = "               "
+	else:
+		move_string = "Mouse Moving   "
 
 
 def main(argc, argv):
