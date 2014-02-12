@@ -7,19 +7,19 @@
 #
 # Data key for wired mouse:
 # 
-# |       0       |    1     |    2     |    3     |       4       | 5 |
-# | button clicks | movement | movement | movement | wheel scrolls | ? |
+# |       0       |    1     |    2     |    3     |       4       |      5     |
+# | button clicks | movement | movement | movement | wheel scrolls | wheel tilt |
 #
 
 
 import sys
 import usb.core
+import subprocess
 
 def process_raw(arg):
-	#clear flags
-	no_click = left_click = right_click = middle_click = back_click = forward_click = multi_click = False
+	##clear strings
+	#no_click = left_click = right_click = middle_click = back_click = forward_click = multi_click = False
 
-	print arg[0]
 
 	#Click handling
 	if int(arg[0]) == 0:
@@ -37,20 +37,30 @@ def process_raw(arg):
 	else:
 		click_string = "Multiple Clicks   "
 
-	#Scroll wheel handling
-	if int(arg[4]) == 0:
-		scroll_string = "              "
-	elif int(arg[4]) == 1:
-		scroll_string = "Scroll Down   "
-	elif int(arg[4]) == 255:
-		scroll_string = "Scroll Up     "
-
 	#Movement Handling
-	if (int(arg[1]) == 0) && (int(arg[2]) == 0) && (int(arg[3]) == 0):
+	if (int(arg[1]) == 0) and (int(arg[2]) == 0) and (int(arg[3]) == 0):
 		move_string = "               "
 	else:
 		move_string = "Mouse Moving   "
 
+	#Scroll wheel handling
+	if int(arg[4]) == 0:
+		scroll_string = "              "
+	elif int(arg[4]) == 1:
+		scroll_string = "Scroll Up     "
+	elif int(arg[4]) == 255:
+		scroll_string = "Scroll Down   "
+
+	#Scroll wheel tilt
+	if int(arg[5]) == 0:
+		tilt_string = "               "
+	elif int(arg[5]) == 1:
+		tilt_string = "Tilted Right   "
+	elif int(arg[5]) == 255:
+		tilt_string = "Tilted Left    "
+
+	#Print formatted data
+	print click_string + move_string + scroll_string + tilt_string
 
 def main(argc, argv):
 	#variables
@@ -82,7 +92,6 @@ def main(argc, argv):
 		device.set_configuration()
 	except usb.core.USBError as e:
 		raise ValueError("Couldn't Configure Device %s" % str(e))
-	#device.reset()
 	
 	while True:
 		try:
