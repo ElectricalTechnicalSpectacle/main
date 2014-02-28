@@ -10,6 +10,10 @@
 # |       0       |    1     |    2     |    3     |       4       |      5     |
 # | button clicks | movement | movement | movement | wheel scrolls | wheel tilt |
 #
+# Data key for power info from STmicro
+# |39         24|23          8|7               0|
+# |   Voltage   |   Current   |   Power State   |
+#
 
 
 import sys
