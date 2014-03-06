@@ -16,15 +16,78 @@ def main(argc, argv):
 
 	dev = usb.core.find(idVendor=vendor_id, idProduct=product_id)
 
+	print ""
+	print ""
+	print ""
+	print "Device:"
+	print "    bLength            =", dev.bLength
+	print "    bDescriptorType    =", dev.bDescriptorType
+	print "    bcdUSB             =", dev.bcdUSB             
+	print "    bDeviceClass       =", dev.bDeviceClass       
+	print "    bDeviceSubClass    =", dev.bDeviceSubClass    
+	print "    bDeviceProtocol    =", dev.bDeviceProtocol    
+	print "    bMaxPacketSize0    =", dev.bMaxPacketSize0    
+	print "    idVendor           =", dev.idVendor           
+	print "    idProduct          =", dev.idProduct          
+	print "    bcdDevice          =", dev.bcdDevice          
+	print "    iManufacturer      =", dev.iManufacturer      
+	print "    iProduct           =", dev.iProduct           
+	print "    iSerialNumber      =", dev.iSerialNumber      
+	print "    bNumConfigurations =", dev.bNumConfigurations 
+	print "    address            =", dev.address            
+	print "    bus                =", dev.bus                
+	print "    port_number        =", dev.port_number        
+	print ""
+	print ""
+	print ""
+
+
 	for cfg in dev:
+
+		print "    Config:"
+		print "        bLength             =", cfg.bLength
+		print "        bDescriptorType     =", cfg.bDescriptorType
+		print "        wTotalLength        =", cfg.wTotalLength
+		print "        bNumInterfaces      =", cfg.bNumInterfaces
+		print "        bConfigurationValue =", cfg.bConfigurationValue
+		print "        iConfiguration      =", cfg.iConfiguration
+		print "        bmAttributes        =", cfg.bmAttributes
+		print "        bMaxPower           =", cfg.bMaxPower
+		print "" 
+		print "" 
+		print "" 
+
 		for ifce in cfg:
+
+			print "        Interface:"
+			print "            bLength            =", ifce.bLength
+			print "            bDescriptorType    =", ifce.bDescriptorType
+			print "            bInterfaceNumber   =", ifce.bInterfaceNumber
+			print "            bAlternateSetting  =", ifce.bAlternateSetting
+			print "            bNumEndpoints      =", ifce.bNumEndpoints
+			print "            bInterfaceClass    =", ifce.bInterfaceClass
+			print "            bInterfaceSubClass =", ifce.bInterfaceSubClass
+			print "            bInterfaceProtocol =", ifce.bInterfaceProtocol
+			print "            iInterface         =", ifce.iInterface
+			print ""
+			print ""
+			print ""
+
 			for ep in ifce:
+
+				print "            Endpoint:"
+				print "                bLength          =", ep.bLength
+				print "                bDescriptorType  =", ep.bDescriptorType
+				print "                bEndpointAddress =", ep.bEndpointAddress
+				print "                bmAttributes     =", ep.bmAttributes
+				print "                wMaxPacketSize   =", ep.wMaxPacketSize
+				print "                bInterval        =", ep.bInterval
+				print "                bRefresh         =", ep.bRefresh
+				print "                bSynchAddress    =", ep.bSynchAddress
 				print ""
-				print "device:", dev, " config:", cfg, " Interface:", ifce, " Endpoint:", ep
 				print ""
-				#print ep.bEndpointAddress
-				#print out all of these data things from the pyusb source core.py file
-	
+				print ""
+
 
 if __name__ == "__main__":
 	main(len(sys.argv), sys.argv) 
