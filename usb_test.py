@@ -13,13 +13,14 @@
 
 
 import sys
-import usb.core
+#import usb.core
 import subprocess
 import select
 import socket
 import threading
 import signal
 import random
+import getpass
 
 ################################################################################
 ##################### SOCKET STUFF #############################################
@@ -145,7 +146,7 @@ import random
 ################################################################################
 
 
-def process_raw(arg):
+def read_usb(arg):
 	##clear strings
 	#no_click = left_click = right_click = middle_click = back_click = forward_click = multi_click = False
 
@@ -193,11 +194,20 @@ def process_raw(arg):
 #	print click_string + move_string + scroll_string + tilt_string
 
 def main(argc, argv):
+
+	#check for root permission (script can only be run as root)
+	if getpass.getuser() != "root":
+		print "Current user: " + getpass.getuser()
+		print "Please run script as root user"
+		sys.exit(0)
+
 	#variables
 	#vendor_id=0x046d	#wired mouse
 	#product_id=0xc06d	#wired mouse
-	vendor_id=0x1268	#stmicro board
-	product_id=0xfffe	#stmicro board
+	vendor_id = 0x1268	#stmicro board
+	product_id = 0xfffe	#stmicro board
+	ST_endpoint = 3
+	ST_interface = 0
 
 	#Find usb device
 	device = usb.core.find(idVendor=vendor_id, idProduct=product_id)
@@ -235,8 +245,15 @@ def main(argc, argv):
 ###	s.run()
 	
 	while True:
+		#for config in device:
+		#	for interface in config:
+		#		for endpoint in interface:
+		#			if endpoint.bEndpointAddress
 		try:
-			data = device.read(endpoint.bEndpointAddress, endpoint.wMaxPacketSize, 0)
+			device.write(ST_endpoint, "test", ST_interface)
+
+		try:
+			data = device.read(ST_endpoint, endpoint.wMaxPacketSize, 0)
 			process_raw(data)
 		except usb.core.USBError as e:
 			if str(e) == "[Errno 110] Operation timed out":
