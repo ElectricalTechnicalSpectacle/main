@@ -20,22 +20,22 @@ def main(argc, argv):
 	print ""
 	print ""
 	print "Device:"
-	print "    bLength            =", dev.bLength
-	print "    bDescriptorType    =", dev.bDescriptorType
-	print "    bcdUSB             =", dev.bcdUSB             
-	print "    bDeviceClass       =", dev.bDeviceClass       
-	print "    bDeviceSubClass    =", dev.bDeviceSubClass    
-	print "    bDeviceProtocol    =", dev.bDeviceProtocol    
-	print "    bMaxPacketSize0    =", dev.bMaxPacketSize0    
-	print "    idVendor           =", dev.idVendor           
-	print "    idProduct          =", dev.idProduct          
-	print "    bcdDevice          =", dev.bcdDevice          
-	print "    iManufacturer      =", dev.iManufacturer      
-	print "    iProduct           =", dev.iProduct           
-	print "    iSerialNumber      =", dev.iSerialNumber      
-	print "    bNumConfigurations =", dev.bNumConfigurations 
-	print "    address            =", dev.address            
-	print "    bus                =", dev.bus                
+	print "    bLength            =", "0x%0.4x" % dev.bLength
+	print "    bDescriptorType    =", "0x%0.4x" % dev.bDescriptorType
+	print "    bcdUSB             =", "0x%0.4x" % dev.bcdUSB             
+	print "    bDeviceClass       =", "0x%0.4x" % dev.bDeviceClass       
+	print "    bDeviceSubClass    =", "0x%0.4x" % dev.bDeviceSubClass    
+	print "    bDeviceProtocol    =", "0x%0.4x" % dev.bDeviceProtocol    
+	print "    bMaxPacketSize0    =", "0x%0.4x" % dev.bMaxPacketSize0    
+	print "    idVendor           =", "0x%0.4x" % dev.idVendor           
+	print "    idProduct          =", "0x%0.4x" % dev.idProduct          
+	print "    bcdDevice          =", "0x%0.4x" % dev.bcdDevice          
+	print "    iManufacturer      =", "0x%0.4x" % dev.iManufacturer      
+	print "    iProduct           =", "0x%0.4x" % dev.iProduct           
+	print "    iSerialNumber      =", "0x%0.4x" % dev.iSerialNumber      
+	print "    bNumConfigurations =", "0x%0.4x" % dev.bNumConfigurations 
+	print "    address            =", "0x%0.4x" % dev.address            
+	print "    bus                =", "0x%0.4x" % dev.bus                
 	print "    port_number        =", dev.port_number        
 	print ""
 	print ""
@@ -45,14 +45,14 @@ def main(argc, argv):
 	for cfg in dev:
 
 		print "    Config:"
-		print "        bLength             =", cfg.bLength
-		print "        bDescriptorType     =", cfg.bDescriptorType
-		print "        wTotalLength        =", cfg.wTotalLength
-		print "        bNumInterfaces      =", cfg.bNumInterfaces
-		print "        bConfigurationValue =", cfg.bConfigurationValue
-		print "        iConfiguration      =", cfg.iConfiguration
-		print "        bmAttributes        =", cfg.bmAttributes
-		print "        bMaxPower           =", cfg.bMaxPower
+		print "        bLength             =", "0x%0.4x" % cfg.bLength
+		print "        bDescriptorType     =", "0x%0.4x" % cfg.bDescriptorType
+		print "        wTotalLength        =", "0x%0.4x" % cfg.wTotalLength
+		print "        bNumInterfaces      =", "0x%0.4x" % cfg.bNumInterfaces
+		print "        bConfigurationValue =", "0x%0.4x" % cfg.bConfigurationValue
+		print "        iConfiguration      =", "0x%0.4x" % cfg.iConfiguration
+		print "        bmAttributes        =", "0x%0.4x" % cfg.bmAttributes
+		print "        bMaxPower           =", "0x%0.4x" % cfg.bMaxPower
 		print "" 
 		print "" 
 		print "" 
@@ -60,15 +60,15 @@ def main(argc, argv):
 		for ifce in cfg:
 
 			print "        Interface:"
-			print "            bLength            =", ifce.bLength
-			print "            bDescriptorType    =", ifce.bDescriptorType
-			print "            bInterfaceNumber   =", ifce.bInterfaceNumber
-			print "            bAlternateSetting  =", ifce.bAlternateSetting
-			print "            bNumEndpoints      =", ifce.bNumEndpoints
-			print "            bInterfaceClass    =", ifce.bInterfaceClass
-			print "            bInterfaceSubClass =", ifce.bInterfaceSubClass
-			print "            bInterfaceProtocol =", ifce.bInterfaceProtocol
-			print "            iInterface         =", ifce.iInterface
+			print "            bLength            =", "0x%0.4x" % ifce.bLength
+			print "            bDescriptorType    =", "0x%0.4x" % ifce.bDescriptorType
+			print "            bInterfaceNumber   =", "0x%0.4x" % ifce.bInterfaceNumber
+			print "            bAlternateSetting  =", "0x%0.4x" % ifce.bAlternateSetting
+			print "            bNumEndpoints      =", "0x%0.4x" % ifce.bNumEndpoints
+			print "            bInterfaceClass    =", "0x%0.4x" % ifce.bInterfaceClass
+			print "            bInterfaceSubClass =", "0x%0.4x" % ifce.bInterfaceSubClass
+			print "            bInterfaceProtocol =", "0x%0.4x" % ifce.bInterfaceProtocol
+			print "            iInterface         =", "0x%0.4x" % ifce.iInterface
 			print ""
 			print ""
 			print ""
@@ -76,14 +76,14 @@ def main(argc, argv):
 			for ep in ifce:
 
 				print "            Endpoint:"
-				print "                bLength          =", ep.bLength
-				print "                bDescriptorType  =", ep.bDescriptorType
-				print "                bEndpointAddress =", ep.bEndpointAddress
-				print "                bmAttributes     =", ep.bmAttributes
-				print "                wMaxPacketSize   =", ep.wMaxPacketSize
-				print "                bInterval        =", ep.bInterval
-				print "                bRefresh         =", ep.bRefresh
-				print "                bSynchAddress    =", ep.bSynchAddress
+				print "                bLength          =", "0x%0.4x" % ep.bLength
+				print "                bDescriptorType  =", "0x%0.4x" % ep.bDescriptorType
+				print "                bEndpointAddress =", "0x%0.4x" % ep.bEndpointAddress
+				print "                bmAttributes     =", "0x%0.4x" % ep.bmAttributes
+				print "                wMaxPacketSize   =", "0x%0.4x" % ep.wMaxPacketSize
+				print "                bInterval        =", "0x%0.4x" % ep.bInterval
+				print "                bRefresh         =", "0x%0.4x" % ep.bRefresh
+				print "                bSynchAddress    =", "0x%0.4x" % ep.bSynchAddress
 				print ""
 				print ""
 				print ""
