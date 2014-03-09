@@ -17,7 +17,7 @@
 
 
 import sys
-#import usb.core
+import usb.core
 import subprocess
 import select
 import socket
@@ -25,6 +25,7 @@ import threading
 import signal
 import random
 import getpass
+import binascii
 
 ################################################################################
 ##################### SOCKET STUFF #############################################
@@ -150,7 +151,7 @@ import getpass
 ################################################################################
 
 
-def read_usb(arg):
+def process_raw(arg):
 	##clear strings
 	#no_click = left_click = right_click = middle_click = back_click = forward_click = multi_click = False
 
@@ -197,6 +198,13 @@ def read_usb(arg):
 #	#Print formatted data
 #	print click_string + move_string + scroll_string + tilt_string
 
+def hex_to_str(num):
+	tmp = str(hex(num))[2:]
+	print tmp
+	if (len(tmp) % 2) != 0:
+		tmp = "0" + tmp
+	return binascii.unhexlify(tmp)
+
 def main(argc, argv):
 
 	#check for root permission (script can only be run as root)
@@ -210,8 +218,12 @@ def main(argc, argv):
 	#product_id=0xc06d	#wired mouse
 	vendor_id = 0x1268	#stmicro board
 	product_id = 0xfffe	#stmicro board
-	ST_endpoint = 3
-	ST_interface = 0
+
+	ST_config = 0	 	#User defined values to help look for correct 
+	ST_interface = 2	#device information, overwritten with object
+	ST_endpoint_wr = 3 	#address if found
+	ST_endpoint_rd = 131	#
+
 
 	#Find usb device
 	device = usb.core.find(idVendor=vendor_id, idProduct=product_id)
@@ -219,55 +231,74 @@ def main(argc, argv):
 		raise ValueError("USB Device Not Found")
 	else:
 		print "Device found: Vendor ID =", "0x%0.4x" % vendor_id,", 0x%0.4x" % product_id
-
-	#Get device endpoint
+	
+	#Get config, interface, endpoint
 	try:
-		endpoint = device[0][(0,0)][0]
-		print "Device Endpoint:", endpoint
-	except usb.core.USBError as e:
-		raise ValueError("Couldn't Get Device Endpoint %s" % str(e))
+		for cfg in device:
+			if cfg.iConfiguration == ST_config:
+				ST_config = cfg
+			for ifce in cfg:
+				if ifce.bInterfaceNumber == ST_interface:
+					ST_interface = ifce
+				for ep in ifce:
+					if ep.bEndpointAddress == ST_endpoint_wr:
+						ST_endpoint_wr = ep
+					if ep.bEndpointAddress == ST_endpoint_rd:
+						ST_endpoint_rd = ep
+		if ST_config == 0 or ST_interface == 2 or ST_endpoint_wr == 3 or ST_endpoint_rd == 131:
+			raise Exception
+		print "Got config", ST_config.iConfiguration, ", interface", ST_interface.bInterfaceNumber, ", write endpoint", ST_endpoint_wr.bEndpointAddress, ", read endpoint", ST_endpoint_rd.bEndpointAddress
+	
+	except:
+		print "Couldn't get device config, interface, endpoint"
+		sys.exit(1)
 
 	#check driver status
-	if device.is_kernel_driver_active(0):
+	if device.is_kernel_driver_active(ST_interface.bInterfaceNumber):
 		try:
-			device.detach_kernel_driver(0)
+			device.detach_kernel_driver(ST_interface.bInterfaceNumber)
 			print "Driver Detached"
 		except usb.core.USBError as e:
 			raise ValueError("Couldn't Detach Driver %s" % str(e))
 	else:
 		print "Driver Inactive"
 
-	#STMICRO DOESN'T LIKE THIS
-	#configure
-	#try:
-	#	device.set_configuration()
-	#except usb.core.USBError as e:
-	#	raise ValueError("Couldn't Configure Device %s" % str(e))
+	##Start server
+###	#s = Server()
+###	#s.run()
+	#
 
-	#Start server
-###	s = Server()
-###	s.run()
+	#Single Read
+	try:
+		send_data = b'\x04\x0c\x00\x00'
+		#device.write(ST_endpoint_wr.bEndpointAddress, send_data, ST_interface.bInterfaceNumber)
+		ST_endpoint_wr.write(send_data)
+	except usb.core.USBError as e:
+		raise ValueError("Couldn't Write To Device: %s" % str(e))
 	
-	while True:
-		#for config in device:
-		#	for interface in config:
-		#		for endpoint in interface:
-		#			if endpoint.bEndpointAddress
-		try:
-			device.write(ST_endpoint, "test", ST_interface)
+	try:
+        	#data = device.read(ST_endpoint_wr.bEndpointAddress, ST_endpoint.wMaxPacketSize, ST_interface.bInterfaceNumber)
+		data = ST_endpoint_rd.read(ST_endpoint_rd.wMaxPacketSize)
+        	process_raw(data)
+        except usb.core.USBError as e:
+        	if str(e) == "[Errno 110] Operation timed out":
+        		print "Timed Out"
+        	else:
+        		raise ValueError("Couldn't Read From Device: %s" % str(e))
 
-		try:
-			data = device.read(ST_endpoint, endpoint.wMaxPacketSize, 0)
-			process_raw(data)
-		except usb.core.USBError as e:
-			if str(e) == "[Errno 110] Operation timed out":
-				print "Timed Out"
-				continue
-			else:
-				raise ValueError("Couldn't Read From Device: %s" % str(e))
-		except KeyboardInterrupt:
-			print "\nProgram Killed"
-			sys.exit()
+	#while True:
+	#	try:
+	#		data = device.read(ST_endpoint.bEndpointAddress, ST_endpoint.wMaxPacketSize, ST_interface.bInterfaceNumber)
+	#		process_raw(data)
+	#	except usb.core.USBError as e:
+	#		if str(e) == "[Errno 110] Operation timed out":
+	#			print "Timed Out"
+	#			continue
+	#		else:
+	#			raise ValueError("Couldn't Read From Device: %s" % str(e))
+	#	except KeyboardInterrupt:
+	#		print "\nProgram Killed"
+	#		sys.exit()
 		
 if __name__ == "__main__":
 	main(len(sys.argv), sys.argv) 

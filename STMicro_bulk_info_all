@@ -1,0 +1,130 @@
+Device:
+    bLength            = 0x0012
+    bDescriptorType    = 0x0001
+    bcdUSB             = 0x0110
+    bDeviceClass       = 0x0002
+    bDeviceSubClass    = 0x0000
+    bDeviceProtocol    = 0x0000
+    bMaxPacketSize0    = 0x0040
+    idVendor           = 0x1268
+    idProduct          = 0xfffe
+    bcdDevice          = 0x0200
+    iManufacturer      = 0x0001
+    iProduct           = 0x0002
+    iSerialNumber      = 0x0003
+    bNumConfigurations = 0x0001
+    address            = 0x0002
+    bus                = 0x0001
+    port_number        = None
+
+
+
+    Config:
+        bLength             = 0x0009
+        bDescriptorType     = 0x0002
+        wTotalLength        = 0x005a
+        bNumInterfaces      = 0x0003
+        bConfigurationValue = 0x0001
+        iConfiguration      = 0x0000
+        bmAttributes        = 0x00c0
+        bMaxPower           = 0x00fa
+
+
+
+        Interface:
+            bLength            = 0x0009
+            bDescriptorType    = 0x0004
+            bInterfaceNumber   = 0x0000
+            bAlternateSetting  = 0x0000
+            bNumEndpoints      = 0x0001
+            bInterfaceClass    = 0x0002
+            bInterfaceSubClass = 0x0002
+            bInterfaceProtocol = 0x0001
+            iInterface         = 0x0000
+
+
+
+            Endpoint:
+                bLength          = 0x0007
+                bDescriptorType  = 0x0005
+                bEndpointAddress = 0x0082
+                bmAttributes     = 0x0003
+                wMaxPacketSize   = 0x0008
+                bInterval        = 0x00ff
+                bRefresh         = 0x0000
+                bSynchAddress    = 0x0000
+
+
+
+        Interface:
+            bLength            = 0x0009
+            bDescriptorType    = 0x0004
+            bInterfaceNumber   = 0x0001
+            bAlternateSetting  = 0x0000
+            bNumEndpoints      = 0x0002
+            bInterfaceClass    = 0x000a
+            bInterfaceSubClass = 0x0000
+            bInterfaceProtocol = 0x0000
+            iInterface         = 0x0000
+
+
+
+            Endpoint:
+                bLength          = 0x0007
+                bDescriptorType  = 0x0005
+                bEndpointAddress = 0x0001
+                bmAttributes     = 0x0002
+                wMaxPacketSize   = 0x0040
+                bInterval        = 0x0000
+                bRefresh         = 0x0000
+                bSynchAddress    = 0x0000
+
+
+
+            Endpoint:
+                bLength          = 0x0007
+                bDescriptorType  = 0x0005
+                bEndpointAddress = 0x0081
+                bmAttributes     = 0x0002
+                wMaxPacketSize   = 0x0040
+                bInterval        = 0x0000
+                bRefresh         = 0x0000
+                bSynchAddress    = 0x0000
+
+
+
+        Interface:
+            bLength            = 0x0009
+            bDescriptorType    = 0x0004
+            bInterfaceNumber   = 0x0002
+            bAlternateSetting  = 0x0000
+            bNumEndpoints      = 0x0002
+            bInterfaceClass    = 0x00ff
+            bInterfaceSubClass = 0x00ff
+            bInterfaceProtocol = 0x00ff
+            iInterface         = 0x0000
+
+
+
+            Endpoint:
+                bLength          = 0x0007
+                bDescriptorType  = 0x0005
+                bEndpointAddress = 0x0003
+                bmAttributes     = 0x0002
+                wMaxPacketSize   = 0x0040
+                bInterval        = 0x0000
+                bRefresh         = 0x0000
+                bSynchAddress    = 0x0000
+
+
+
+            Endpoint:
+                bLength          = 0x0007
+                bDescriptorType  = 0x0005
+                bEndpointAddress = 0x0083
+                bmAttributes     = 0x0002
+                wMaxPacketSize   = 0x0040
+                bInterval        = 0x0000
+                bRefresh         = 0x0000
+                bSynchAddress    = 0x0000
+
