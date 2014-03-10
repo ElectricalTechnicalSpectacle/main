@@ -3,17 +3,9 @@
 # Created by: Jacob Branaugh
 # Created on: 02/02/2014 22:40
 #
-# Program to test use of USB with PyUSB
+# Program to implement usb transfer between beaglebone and stmicro
 #
-# Data key for wired mouse:
-# 
-# |       0       |    1     |    2     |    3     |       4       |      5     |
-# | button clicks | movement | movement | movement | wheel scrolls | wheel tilt |
-#
-# Data key for power info from STmicro
-# |39         24|23          8|7               0|
-# |   Voltage   |   Current   |   Power State   |
-#
+
 
 
 import sys
@@ -25,7 +17,6 @@ import threading
 import signal
 import random
 import getpass
-import binascii
 
 ################################################################################
 ##################### SOCKET STUFF #############################################
@@ -150,14 +141,40 @@ import binascii
 ################################################################################
 ################################################################################
 
+# Data key for wired mouse:
+# 
+# |       0       |    1     |    2     |    3     |       4       |      5     |
+# | button clicks | movement | movement | movement | wheel scrolls | wheel tilt |
+#
+# Data key for power info from STmicro
+# |      1 Byte       |     1 Byte      |  1 Byte   |  1 Byte   |   2 Byte    |   2 Byte    |     1 Byte      |
+# |   Packet Length   |   Packet Type   |   Sum 1   |   Sum 2   |   Current   |   Voltage   |   Power State   |
+#
+def process_raw(packet):
+	try:
+		length = int(packet[0])
+		pkt_type = int(packet[1])
+		check_1 = int(packet[2])	#Checksums not needed, only here to keep the
+		check_2 = int(packet[3])	#numbers in order
+		current = ((int(packet[5]) << 8) | int(packet[4]))
+		voltage = ((int(packet[7]) << 8) | int(packet[6]))
+		pwr_state = int(packet[8])
 
-def process_raw(arg):
-	##clear strings
-	#no_click = left_click = right_click = middle_click = back_click = forward_click = multi_click = False
+		#test print
+		print ("Packet Length:    " + str(length) + "\n" +
+		       "Packet Type:      " + str(pkt_type) + "\n" +
+		       "Checksum 1:       " + str(check_1) + "\n" +
+		       "Checksum 2:       " + str(check_2) + "\n" +
+		       "Current Reading:  " + str(current) + "\n" +
+		       "Voltage Reading:  " + str(voltage) + "\n" +
+		       "DUT Power State:  " + str(pwr_state) + "\n")
+	except:
+		print "Error: Invalid Packet"
 
-	print arg
-
-	#Click handling
+#	##clear strings
+#	#no_click = left_click = right_click = middle_click = back_click = forward_click = multi_click = False
+#
+#	#Click handling
 #	if int(arg[0]) == 0:
 #		click_string = "                  "
 #	elif int(arg[0]) == 1:
@@ -198,12 +215,6 @@ def process_raw(arg):
 #	#Print formatted data
 #	print click_string + move_string + scroll_string + tilt_string
 
-def hex_to_str(num):
-	tmp = str(hex(num))[2:]
-	print tmp
-	if (len(tmp) % 2) != 0:
-		tmp = "0" + tmp
-	return binascii.unhexlify(tmp)
 
 def main(argc, argv):
 
@@ -218,11 +229,15 @@ def main(argc, argv):
 	#product_id=0xc06d	#wired mouse
 	vendor_id = 0x1268	#stmicro board
 	product_id = 0xfffe	#stmicro board
+	CFG_NUM = 0
+	IFCE_NUM = 2
+	EP_ADDR_WR = 3
+	EP_ADDR_RD = 131	#0x83
 
-	ST_config = 0	 	#User defined values to help look for correct 
-	ST_interface = 2	#device information, overwritten with object
-	ST_endpoint_wr = 3 	#address if found
-	ST_endpoint_rd = 131	#
+	ST_config = CFG_NUM 		#User defined values to help look for correct 
+	ST_interface = IFCE_NUM		#device information, overwritten with object
+	ST_endpoint_wr = EP_ADDR_WR	#address if found
+	ST_endpoint_rd = EP_ADDR_RD	#
 
 
 	#Find usb device
@@ -245,9 +260,15 @@ def main(argc, argv):
 						ST_endpoint_wr = ep
 					if ep.bEndpointAddress == ST_endpoint_rd:
 						ST_endpoint_rd = ep
-		if ST_config == 0 or ST_interface == 2 or ST_endpoint_wr == 3 or ST_endpoint_rd == 131:
+		if ((ST_config == CFG_NUM) or 
+		    (ST_interface == IFCE_NUM) or 
+		    (ST_endpoint_wr == EP_ADDR_WR) or 
+		    (ST_endpoint_rd == EP_ADDR_RD)):
 			raise Exception
-		print "Got config", ST_config.iConfiguration, ", interface", ST_interface.bInterfaceNumber, ", write endpoint", ST_endpoint_wr.bEndpointAddress, ", read endpoint", ST_endpoint_rd.bEndpointAddress
+		print "Got config", ST_config.iConfiguration, \
+		       ", interface", ST_interface.bInterfaceNumber, \
+		       ", write endpoint", ST_endpoint_wr.bEndpointAddress, \
+		       ", read endpoint", ST_endpoint_rd.bEndpointAddress
 	
 	except:
 		print "Couldn't get device config, interface, endpoint"
@@ -268,37 +289,49 @@ def main(argc, argv):
 ###	#s.run()
 	#
 
-	#Single Read
-	try:
-		send_data = b'\x04\x0c\x00\x00'
-		#device.write(ST_endpoint_wr.bEndpointAddress, send_data, ST_interface.bInterfaceNumber)
-		ST_endpoint_wr.write(send_data)
-	except usb.core.USBError as e:
-		raise ValueError("Couldn't Write To Device: %s" % str(e))
-	
-	try:
-        	#data = device.read(ST_endpoint_wr.bEndpointAddress, ST_endpoint.wMaxPacketSize, ST_interface.bInterfaceNumber)
-		data = ST_endpoint_rd.read(ST_endpoint_rd.wMaxPacketSize)
-        	process_raw(data)
-        except usb.core.USBError as e:
-        	if str(e) == "[Errno 110] Operation timed out":
-        		print "Timed Out"
-        	else:
-        		raise ValueError("Couldn't Read From Device: %s" % str(e))
+	##Single Read
+	#try:
+	#	send_data = b'\x04\x0c\x00\x00'
+	#	#device.write(ST_endpoint_wr.bEndpointAddress, send_data, ST_interface.bInterfaceNumber)
+	#	ST_endpoint_wr.write(send_data)
+	#except usb.core.USBError as e:
+	#	raise ValueError("Couldn't Write To Device: %s" % str(e))
+	#
+	#try:
+        #	#data = device.read(ST_endpoint_wr.bEndpointAddress, ST_endpoint.wMaxPacketSize, ST_interface.bInterfaceNumber)
+	#	data = ST_endpoint_rd.read(ST_endpoint_rd.wMaxPacketSize)
+        #	process_raw(data)
+        #except usb.core.USBError as e:
+        #	if str(e) == "[Errno 110] Operation timed out":
+        #		print "Timed Out"
+        #	else:
+        #		raise ValueError("Couldn't Read From Device: %s" % str(e))
 
 	#while True:
-	#	try:
-	#		data = device.read(ST_endpoint.bEndpointAddress, ST_endpoint.wMaxPacketSize, ST_interface.bInterfaceNumber)
-	#		process_raw(data)
-	#	except usb.core.USBError as e:
-	#		if str(e) == "[Errno 110] Operation timed out":
-	#			print "Timed Out"
-	#			continue
-	#		else:
-	#			raise ValueError("Couldn't Read From Device: %s" % str(e))
-	#	except KeyboardInterrupt:
-	#		print "\nProgram Killed"
-	#		sys.exit()
+	for i in range(0,10):
+
+		#Signal STmicro for data
+		try:
+			send_data = b'\x04\x0c\x00\x00'
+			ST_endpoint_wr.write(send_data)
+		except usb.core.USBError as e:
+			raise ValueError("Couldn't Write To Device: %s" % str(e))
+	
+		#Read data from STmicro
+		try:
+			data = ST_endpoint_rd.read(10)
+			process_raw(data)
+		except usb.core.USBError as e:
+			if str(e) == "[Errno 110] Operation timed out":
+				print "Timed Out"
+				continue
+			else:
+				raise ValueError("Couldn't Read From Device: %s" % str(e))
+
+		#Break out of program on interrupt
+		except KeyboardInterrupt:
+			print "\nProgram Killed"
+			sys.exit()
 		
 if __name__ == "__main__":
 	main(len(sys.argv), sys.argv) 
