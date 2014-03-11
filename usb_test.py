@@ -18,128 +18,128 @@ import signal
 import random
 import getpass
 
-################################################################################
-##################### SOCKET STUFF #############################################
-################################################################################
-###PORT =      59481
-###HOST =      '127.0.0.1'
-###BACKLOG =   5
-###BUFF =      2048
-###
-###class Server:
-###    def __init__(self):
-###        self.host = HOST
-###        self.port = PORT
-###        self.conn = (self.host, self.port)
-###        self.backlog = BACKLOG
-###        self.server = None
-###        self.threads = []
-###        self.clients = []
-###
-###    def register_signals(self):
-###        signal.signal(signal.SIGHUP, self.signal_handler)
-###        signal.signal(signal.SIGINT, self.signal_handler)
-###        signal.signal(signal.SIGQUIT, self.signal_handler)
-###
-###    def open_socket(self):
-###        try:
-###            self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-###            self.server.bind(self.conn)
-###            self.server.listen(self.backlog)
-###            print "Started server: " + str(self.host) + " on port: " + str(self.port)
-###            print "Listening for incoming connections..."
-###        except socket.error as message:
-###            if self.server:
-###                self.server.close()
-###            print >> sys.stderr, "Could not open socket: " + str(message)
-###            sys.exit(1)
-###        self.register_signals()
-###
-###    def signal_handler(self, signum, frame):
-###        print "Caught signal: ", signum
-###        print "Closing the socket and cleaning up the mess..."
-###        self.server_shutdown()
-###
-###    def server_shutdown(self):
-###        self.running = 0
-###        for c in self.threads:
-###            try:
-###                c.join()
-###            except RuntimeError:
-###                pass
-###        if self.server:
-###            self.server.close()
-###        sys.exit(1)
-###
-###    def run(self):
-###        self.open_socket()
-###        inputs = [self.server, sys.stdin]
-###        self.running = 1
-###        while self.running:
-###            try:
-###                iready, oready, eready = select.select(inputs, [], [])
-###            except select.error, err:
-###                self.running = 0
-###                pass
-###            for s in iready:
-###                if s == self.server:
-###                    try:
-###                        c = Client(self, self.server.accept())
-###                        c.start()
-###                        self.threads.append(c)
-###                    except socket.error, err:
-###                        pass
-###
-###                elif s == sys.stdin:
-###                    junk = sys.stdin.readline()
-###                    self.running = 0 
-###
-###                else:
-###                    self.running = 0
-###
-###        # close all threads
-###        print 'Closing....'
-###        for c in self.threads:
-###            c.join()
-###        self.server_shutdown()
-###
-###
-###class Client(threading.Thread):
-###    def __init__(self, server, (client, address)):
-###        threading.Thread.__init__(self)
-###        self.client = client
-###        self.address = address
-###        self.server = server
-###
-###    def run(self):
-###    	print "Incoming connection from : " + str(self.address)
-###        running = 1
-###        while running:
-###            data = self.client.recv(BUFF)
-###            if data:
-###                if data == 'Hello':
-###                    self.client.send("Hello back")
-###
-###                elif data == 'Test':
-###                    num_1 = str(random.randint(1, 99999))
-###                    num_2 = str(random.randint(1, 10)).rjust(2, '0')
-###                    unit = random.choice(['mW', 'W', 'KW', 'MW']);
-###                    full =  "|".join([num_1, num_2, unit])
-###                    self.client.send(full)
-###
-###                elif data == 'Done':
-###                    self.server.server_shutdown()
-###                    running = 0
-###            else:
-###                running = 0
-###        
-###        self.client.close()
-###    
-###    def __repr__(self):
-###        return str(self.address)
-################################################################################
-################################################################################
-################################################################################
+#################################################################################
+###################### SOCKET STUFF #############################################
+#################################################################################
+#PORT =      59481
+#HOST =      '127.0.0.1'
+#BACKLOG =   5
+#BUFF =      2048
+#
+#class Server:
+#    def __init__(self):
+#        self.host = HOST
+#        self.port = PORT
+#        self.conn = (self.host, self.port)
+#        self.backlog = BACKLOG
+#        self.server = None
+#        self.threads = []
+#        self.clients = []
+#
+#    def register_signals(self):
+#        signal.signal(signal.SIGHUP, self.signal_handler)
+#        signal.signal(signal.SIGINT, self.signal_handler)
+#        signal.signal(signal.SIGQUIT, self.signal_handler)
+#
+#    def open_socket(self):
+#        try:
+#            self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+#            self.server.bind(self.conn)
+#            self.server.listen(self.backlog)
+#            print "Started server: " + str(self.host) + " on port: " + str(self.port)
+#            print "Listening for incoming connections..."
+#        except socket.error as message:
+#            if self.server:
+#                self.server.close()
+#            print >> sys.stderr, "Could not open socket: " + str(message)
+#            sys.exit(1)
+#        self.register_signals()
+#
+#    def signal_handler(self, signum, frame):
+#        print "Caught signal: ", signum
+#        print "Closing the socket and cleaning up the mess..."
+#        self.server_shutdown()
+#
+#    def server_shutdown(self):
+#        self.running = 0
+#        for c in self.threads:
+#            try:
+#                c.join()
+#            except RuntimeError:
+#                pass
+#        if self.server:
+#            self.server.close()
+#        sys.exit(1)
+#
+#    def run(self):
+#        self.open_socket()
+#        inputs = [self.server, sys.stdin]
+#        self.running = 1
+#        while self.running:
+#            try:
+#                iready, oready, eready = select.select(inputs, [], [])
+#            except select.error, err:
+#                self.running = 0
+#                pass
+#            for s in iready:
+#                if s == self.server:
+#                    try:
+#                        c = Client(self, self.server.accept())
+#                        c.start()
+#                        self.threads.append(c)
+#                    except socket.error, err:
+#                        pass
+#
+#                elif s == sys.stdin:
+#                    junk = sys.stdin.readline()
+#                    self.running = 0 
+#
+#                else:
+#                    self.running = 0
+#
+#        # close all threads
+#        print 'Closing....'
+#        for c in self.threads:
+#            c.join()
+#        self.server_shutdown()
+#
+#
+#class Client(threading.Thread):
+#    def __init__(self, server, (client, address)):
+#        threading.Thread.__init__(self)
+#        self.client = client
+#        self.address = address
+#        self.server = server
+#
+#    def run(self):
+#    	print "Incoming connection from : " + str(self.address)
+#        running = 1
+#        while running:
+#            data = self.client.recv(BUFF)
+#            if data:
+#                if data == 'Hello':
+#                    self.client.send("Hello back")
+#
+#                elif data == 'Test':
+#                    num_1 = str(random.randint(1, 99999))
+#                    num_2 = str(random.randint(1, 10)).rjust(2, '0')
+#                    unit = random.choice(['mW', 'W', 'KW', 'MW']);
+#                    full =  "|".join([num_1, num_2, unit])
+#                    self.client.send(full)
+#
+#                elif data == 'Done':
+#                    self.server.server_shutdown()
+#                    running = 0
+#            else:
+#                running = 0
+#        
+#        self.client.close()
+#    
+#    def __repr__(self):
+#        return str(self.address)
+##############################################################################
+##############################################################################
+##############################################################################
 
 # Data key for wired mouse:
 # 
@@ -156,8 +156,8 @@ def process_raw(packet):
 		pkt_type = int(packet[1])
 		check_1 = int(packet[2])	#Checksums not needed, only here to keep the
 		check_2 = int(packet[3])	#numbers in order
-		current = ((int(packet[5]) << 8) | int(packet[4]))
-		voltage = ((int(packet[7]) << 8) | int(packet[6]))
+		voltage = ((int(packet[5]) << 8) | int(packet[4]))
+		current = ((int(packet[7]) << 8) | int(packet[6]))
 		pwr_state = int(packet[8])
 
 		#test print
@@ -170,50 +170,6 @@ def process_raw(packet):
 		       "DUT Power State:  " + str(pwr_state) + "\n")
 	except:
 		print "Error: Invalid Packet"
-
-#	##clear strings
-#	#no_click = left_click = right_click = middle_click = back_click = forward_click = multi_click = False
-#
-#	#Click handling
-#	if int(arg[0]) == 0:
-#		click_string = "                  "
-#	elif int(arg[0]) == 1:
-#		click_string = "Left Click        "
-#	elif int(arg[0]) == 2:
-#		click_string = "Right Click       "
-#	elif int(arg[0]) == 4:
-#		click_string = "Middle Click      "
-#	elif int(arg[0]) == 8:
-#		click_string = "Back Click        "
-#	elif int(arg[0]) == 16:
-#		click_string = "Forward Click     "
-#	else:
-#		click_string = "Multiple Clicks   "
-#
-#	#Movement Handling
-#	if (int(arg[1]) == 0) and (int(arg[2]) == 0) and (int(arg[3]) == 0):
-#		move_string = "               "
-#	else:
-#		move_string = "Mouse Moving   "
-#
-#	#Scroll wheel handling
-#	if int(arg[4]) == 0:
-#		scroll_string = "              "
-#	elif int(arg[4]) == 1:
-#		scroll_string = "Scroll Up     "
-#	elif int(arg[4]) == 255:
-#		scroll_string = "Scroll Down   "
-#
-#	#Scroll wheel tilt
-#	if int(arg[5]) == 0:
-#		tilt_string = "               "
-#	elif int(arg[5]) == 1:
-#		tilt_string = "Tilted Right   "
-#	elif int(arg[5]) == 255:
-#		tilt_string = "Tilted Left    "
-#
-#	#Print formatted data
-#	print click_string + move_string + scroll_string + tilt_string
 
 
 def main(argc, argv):
@@ -260,10 +216,10 @@ def main(argc, argv):
 						ST_endpoint_wr = ep
 					if ep.bEndpointAddress == ST_endpoint_rd:
 						ST_endpoint_rd = ep
-		if ((ST_config == CFG_NUM) or 
-		    (ST_interface == IFCE_NUM) or 
-		    (ST_endpoint_wr == EP_ADDR_WR) or 
-		    (ST_endpoint_rd == EP_ADDR_RD)):
+		if (ST_config == CFG_NUM) or \
+		   (ST_interface == IFCE_NUM) or \
+		   (ST_endpoint_wr == EP_ADDR_WR) or \
+		   (ST_endpoint_rd == EP_ADDR_RD):
 			raise Exception
 		print "Got config", ST_config.iConfiguration, \
 		       ", interface", ST_interface.bInterfaceNumber, \
@@ -285,9 +241,9 @@ def main(argc, argv):
 		print "Driver Inactive"
 
 	##Start server
-###	#s = Server()
-###	#s.run()
-	#
+	#s = Server()
+	#s.run()
+	
 
 	##Single Read
 	#try:
@@ -308,7 +264,7 @@ def main(argc, argv):
         #		raise ValueError("Couldn't Read From Device: %s" % str(e))
 
 	#while True:
-	for i in range(0,10):
+	for i in range(0,500):
 
 		#Signal STmicro for data
 		try:
