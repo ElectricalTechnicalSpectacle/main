@@ -189,18 +189,17 @@ def process_raw(packet, wr_buf):
 		#build the string
 		string = string + \
 			 str(int(v_conv)) + "," + \
-			 str(v_conv-int(v_conv))[2:5] + "," + \
+			 str(v_conv-int(v_conv))[2:4] + "," + \
 			 "V" + "&" + \
 			 str(int(i_conv)) + "," + \
-			 str(i_conv-int(i_conv))[2:5] + "," + \
+			 str(i_conv-int(i_conv))[2:4] + "," + \
 			 "mA" + "&" + \
 			 str(int(power)) + "," + \
-			 str(power-int(power))[2:5] + "," + \
-			 "mW" + "&" + \
-			 str(pwr_state) + "~"
+			 str(power-int(power))[2:4] + "," + \
+			 "mW" + "~" #TODO: DELETE THIS WHEN POWER STATE THING IS FUNCTIONAL
+			 #"mW" + "&" + \
+			 #str(pwr_state) + "~"
 			 
-	#wr_buf.append(string)		 
-
 		#test print
 		print "Packet Length:    " + str(length) + "\n" + \
 		      "Number Values:    " + str(num_readings) + "\n" + \
@@ -211,11 +210,10 @@ def process_raw(packet, wr_buf):
 		      "Voltage Reading:  " + str(v_conv) + "\n" + \
 		      "Power Reading:    " + str(power) + "\n" + \
 		      "DUT Power State:  " + str(pwr_state) + "\n"
-	print ""
-	print string
-	print ""
 	#except:
 	#	print "Error: Invalid Packet"
+
+	wr_buf.append(string[:-1])		 
 
 
 def main(argc, argv):
@@ -315,9 +313,13 @@ def main(argc, argv):
 	#	except KeyboardInterrupt:
 	#		print "\nProgram Killed"
 	#		sys.exit()
-	temp_packet = [14, 0, 0, 0, 188, 127, 255, 191, 0, 153, 25, 255, 7, 1]
+	print socket_buffer
+
 	temp_packet = [14, 0, 0, 0, 188, 127, 255, 191, 0, 10, 70, 153, 25, 1]
 	process_raw(temp_packet, socket_buffer)
+	process_raw(temp_packet, socket_buffer)
+
+	print socket_buffer
 	
 	##Single Read
 	#try:
