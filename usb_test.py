@@ -147,18 +147,31 @@ import getpass
 # | button clicks | movement | movement | movement | wheel scrolls | wheel tilt |
 #
 # Data key for power info from STmicro
+#                                                               |            Repeat However Many              |
 # |      1 Byte       |     1 Byte      |  1 Byte   |  1 Byte   |   2 Byte    |   2 Byte    |     1 Byte      |
 # |   Packet Length   |   Packet Type   |   Sum 1   |   Sum 2   |   Current   |   Voltage   |   Power State   |
 #
-def process_raw(packet):
+def process_raw(packet, wr_buf):
+	#Local variables
+	NACK = 1
+
 	try:
 		length = int(packet[0])
+		num_readings = (length - 4) / 5
 		pkt_type = int(packet[1])
+		if pkt_type == NACK:
+			#Handle nack appropriately 
+			print "Packet was a NACK"
+			return
+
 		check_1 = int(packet[2])	#Checksums not needed, only here to keep the
 		check_2 = int(packet[3])	#numbers in order
-		voltage = ((int(packet[5]) << 8) | int(packet[4]))
-		current = ((int(packet[7]) << 8) | int(packet[6]))
-		pwr_state = int(packet[8])
+
+		for idx in range(1, num_readings+1):
+			voltage = ((int(packet[(i*4)+1]) << 8) | int(packet[i*4]))
+			current = ((int(packet[(i*4)+3]) << 8) | int(packet[(i*4)+2]))
+			pwr_state = int(packet[(i*4)+4])
+			#build the string
 
 		#test print
 		print ("Packet Length:    " + str(length) + "\n" +
@@ -181,8 +194,8 @@ def main(argc, argv):
 		sys.exit(0)
 
 	#variables
-	#vendor_id=0x046d	#wired mouse
-	#product_id=0xc06d	#wired mouse
+	socket_buffer = []
+
 	vendor_id = 0x1268	#stmicro board
 	product_id = 0xfffe	#stmicro board
 	CFG_NUM = 0
@@ -244,7 +257,32 @@ def main(argc, argv):
 	#s = Server()
 	#s.run()
 	
+	#while True:
+	for i in range(0,10):
 
+		#Signal STmicro for data
+		try:
+			send_data = b'\x04\x0c\x00\x00'
+			ST_endpoint_wr.write(send_data)
+		except usb.core.USBError as e:
+			raise ValueError("Couldn't Write To Device: %s" % str(e))
+	
+		#Read data from STmicro
+		try:
+			data = ST_endpoint_rd.read(204) #read 204 bytes (max number of samples)
+			process_raw(data, socket_buffer)
+		except usb.core.USBError as e:
+			if str(e) == "[Errno 110] Operation timed out":
+				print "Timed Out"
+				continue
+			else:
+				raise ValueError("Couldn't Read From Device: %s" % str(e))
+
+		#Break out of program on interrupt
+		except KeyboardInterrupt:
+			print "\nProgram Killed"
+			sys.exit()
+	
 	##Single Read
 	#try:
 	#	send_data = b'\x04\x0c\x00\x00'
@@ -263,31 +301,6 @@ def main(argc, argv):
         #	else:
         #		raise ValueError("Couldn't Read From Device: %s" % str(e))
 
-	#while True:
-	for i in range(0,500):
-
-		#Signal STmicro for data
-		try:
-			send_data = b'\x04\x0c\x00\x00'
-			ST_endpoint_wr.write(send_data)
-		except usb.core.USBError as e:
-			raise ValueError("Couldn't Write To Device: %s" % str(e))
 	
-		#Read data from STmicro
-		try:
-			data = ST_endpoint_rd.read(10)
-			process_raw(data)
-		except usb.core.USBError as e:
-			if str(e) == "[Errno 110] Operation timed out":
-				print "Timed Out"
-				continue
-			else:
-				raise ValueError("Couldn't Read From Device: %s" % str(e))
-
-		#Break out of program on interrupt
-		except KeyboardInterrupt:
-			print "\nProgram Killed"
-			sys.exit()
-		
 if __name__ == "__main__":
 	main(len(sys.argv), sys.argv) 
