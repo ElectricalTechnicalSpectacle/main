@@ -9,7 +9,7 @@
 
 
 import sys
-import usb.core
+#import usb.core
 import subprocess
 import select
 import socket
@@ -141,6 +141,12 @@ import getpass
 ##############################################################################
 ##############################################################################
 
+def convert_current(num):
+	#ret = num
+	ret = (num/65535.0)*1000
+	return ret
+
+
 # Data key for wired mouse:
 # 
 # |       0       |    1     |    2     |    3     |       4       |      5     |
@@ -149,40 +155,67 @@ import getpass
 # Data key for power info from STmicro
 #                                                               |            Repeat However Many              |
 # |      1 Byte       |     1 Byte      |  1 Byte   |  1 Byte   |   2 Byte    |   2 Byte    |     1 Byte      |
-# |   Packet Length   |   Packet Type   |   Sum 1   |   Sum 2   |   Current   |   Voltage   |   Power State   |
+# |   Packet Length   |   Packet Type   |   Sum 1   |   Sum 2   |   Voltage   |   Current   |   Power State   |
 #
 def process_raw(packet, wr_buf):
 	#Local variables
 	NACK = 1
 
-	try:
-		length = int(packet[0])
-		num_readings = (length - 4) / 5
-		pkt_type = int(packet[1])
-		if pkt_type == NACK:
-			#Handle nack appropriately 
-			print "Packet was a NACK"
-			return
+	#try:
+	length = int(packet[0])
+	num_readings = (length - 4) / 5
+	pkt_type = int(packet[1])
+	if pkt_type == NACK:
+		#Handle nack appropriately 
+		print "Packet was a NACK"
+		return
 
-		check_1 = int(packet[2])	#Checksums not needed, only here to keep the
-		check_2 = int(packet[3])	#numbers in order
+	check_1 = int(packet[2])	#Checksums not needed, only here to keep the
+	check_2 = int(packet[3])	#numbers in order
 
-		for idx in range(1, num_readings+1):
-			voltage = ((int(packet[(i*4)+1]) << 8) | int(packet[i*4]))
-			current = ((int(packet[(i*4)+3]) << 8) | int(packet[(i*4)+2]))
-			pwr_state = int(packet[(i*4)+4])
-			#build the string
+	string = str(num_readings) + "|"
+	for i in range(0, num_readings):
+		#parse raw fields
+		idx = i * 5 + 4
+		voltage = ((int(packet[idx+1]) << 8) | int(packet[idx]))
+		current = ((int(packet[idx+3]) << 8) | int(packet[idx+2]))
+		pwr_state = int(packet[idx+4])
+
+		#convert raw data
+		v_conv = (voltage/65200.0)*12.0
+		i_conv = convert_current(current)
+		power = v_conv * i_conv
+
+		#build the string
+		string = string + \
+			 str(int(v_conv)) + "," + \
+			 str(v_conv-int(v_conv))[2:5] + "," + \
+			 "V" + "&" + \
+			 str(int(i_conv)) + "," + \
+			 str(i_conv-int(i_conv))[2:5] + "," + \
+			 "mA" + "&" + \
+			 str(int(power)) + "," + \
+			 str(power-int(power))[2:5] + "," + \
+			 "mW" + "&" + \
+			 str(pwr_state) + "~"
+			 
+	#wr_buf.append(string)		 
 
 		#test print
-		print ("Packet Length:    " + str(length) + "\n" +
-		       "Packet Type:      " + str(pkt_type) + "\n" +
-		       "Checksum 1:       " + str(check_1) + "\n" +
-		       "Checksum 2:       " + str(check_2) + "\n" +
-		       "Current Reading:  " + str(current) + "\n" +
-		       "Voltage Reading:  " + str(voltage) + "\n" +
-		       "DUT Power State:  " + str(pwr_state) + "\n")
-	except:
-		print "Error: Invalid Packet"
+		print "Packet Length:    " + str(length) + "\n" + \
+		      "Number Values:    " + str(num_readings) + "\n" + \
+		      "Packet Type:      " + str(pkt_type) + "\n" + \
+		      "Checksum 1:       " + str(check_1) + "\n" + \
+		      "Checksum 2:       " + str(check_2) + "\n" + \
+		      "Current Reading:  " + str(i_conv) + "\n" + \
+		      "Voltage Reading:  " + str(v_conv) + "\n" + \
+		      "Power Reading:    " + str(power) + "\n" + \
+		      "DUT Power State:  " + str(pwr_state) + "\n"
+	print ""
+	print string
+	print ""
+	#except:
+	#	print "Error: Invalid Packet"
 
 
 def main(argc, argv):
@@ -210,78 +243,81 @@ def main(argc, argv):
 
 
 	#Find usb device
-	device = usb.core.find(idVendor=vendor_id, idProduct=product_id)
-	if device == None:
-		raise ValueError("USB Device Not Found")
-	else:
-		print "Device found: Vendor ID =", "0x%0.4x" % vendor_id,", 0x%0.4x" % product_id
-	
-	#Get config, interface, endpoint
-	try:
-		for cfg in device:
-			if cfg.iConfiguration == ST_config:
-				ST_config = cfg
-			for ifce in cfg:
-				if ifce.bInterfaceNumber == ST_interface:
-					ST_interface = ifce
-				for ep in ifce:
-					if ep.bEndpointAddress == ST_endpoint_wr:
-						ST_endpoint_wr = ep
-					if ep.bEndpointAddress == ST_endpoint_rd:
-						ST_endpoint_rd = ep
-		if (ST_config == CFG_NUM) or \
-		   (ST_interface == IFCE_NUM) or \
-		   (ST_endpoint_wr == EP_ADDR_WR) or \
-		   (ST_endpoint_rd == EP_ADDR_RD):
-			raise Exception
-		print "Got config", ST_config.iConfiguration, \
-		       ", interface", ST_interface.bInterfaceNumber, \
-		       ", write endpoint", ST_endpoint_wr.bEndpointAddress, \
-		       ", read endpoint", ST_endpoint_rd.bEndpointAddress
-	
-	except:
-		print "Couldn't get device config, interface, endpoint"
-		sys.exit(1)
+	#device = usb.core.find(idVendor=vendor_id, idProduct=product_id)
+	#if device == None:
+	#	raise ValueError("USB Device Not Found")
+	#else:
+	#	print "Device found: Vendor ID =", "0x%0.4x" % vendor_id,", 0x%0.4x" % product_id
+	#
+	##Get config, interface, endpoint
+	#try:
+	#	for cfg in device:
+	#		if cfg.iConfiguration == ST_config:
+	#			ST_config = cfg
+	#		for ifce in cfg:
+	#			if ifce.bInterfaceNumber == ST_interface:
+	#				ST_interface = ifce
+	#			for ep in ifce:
+	#				if ep.bEndpointAddress == ST_endpoint_wr:
+	#					ST_endpoint_wr = ep
+	#				if ep.bEndpointAddress == ST_endpoint_rd:
+	#					ST_endpoint_rd = ep
+	#	if (ST_config == CFG_NUM) or \
+	#	   (ST_interface == IFCE_NUM) or \
+	#	   (ST_endpoint_wr == EP_ADDR_WR) or \
+	#	   (ST_endpoint_rd == EP_ADDR_RD):
+	#		raise Exception
+	#	print "Got config", ST_config.iConfiguration, \
+	#	       ", interface", ST_interface.bInterfaceNumber, \
+	#	       ", write endpoint", ST_endpoint_wr.bEndpointAddress, \
+	#	       ", read endpoint", ST_endpoint_rd.bEndpointAddress
+	#
+	#except:
+	#	print "Couldn't get device config, interface, endpoint"
+	#	sys.exit(1)
 
-	#check driver status
-	if device.is_kernel_driver_active(ST_interface.bInterfaceNumber):
-		try:
-			device.detach_kernel_driver(ST_interface.bInterfaceNumber)
-			print "Driver Detached"
-		except usb.core.USBError as e:
-			raise ValueError("Couldn't Detach Driver %s" % str(e))
-	else:
-		print "Driver Inactive"
+	##check driver status
+	#if device.is_kernel_driver_active(ST_interface.bInterfaceNumber):
+	#	try:
+	#		device.detach_kernel_driver(ST_interface.bInterfaceNumber)
+	#		print "Driver Detached"
+	#	except usb.core.USBError as e:
+	#		raise ValueError("Couldn't Detach Driver %s" % str(e))
+	#else:
+	#	print "Driver Inactive"
 
 	##Start server
 	#s = Server()
 	#s.run()
 	
 	#while True:
-	for i in range(0,10):
+	#for i in range(0,10):
 
-		#Signal STmicro for data
-		try:
-			send_data = b'\x04\x0c\x00\x00'
-			ST_endpoint_wr.write(send_data)
-		except usb.core.USBError as e:
-			raise ValueError("Couldn't Write To Device: %s" % str(e))
-	
-		#Read data from STmicro
-		try:
-			data = ST_endpoint_rd.read(204) #read 204 bytes (max number of samples)
-			process_raw(data, socket_buffer)
-		except usb.core.USBError as e:
-			if str(e) == "[Errno 110] Operation timed out":
-				print "Timed Out"
-				continue
-			else:
-				raise ValueError("Couldn't Read From Device: %s" % str(e))
+	#	#Signal STmicro for data
+	#	try:
+	#		send_data = b'\x04\x0c\x00\x00'
+	#		ST_endpoint_wr.write(send_data)
+	#	except usb.core.USBError as e:
+	#		raise ValueError("Couldn't Write To Device: %s" % str(e))
+	#
+	#	#Read data from STmicro
+	#	try:
+	#		data = ST_endpoint_rd.read(204) #read 204 bytes (max number of samples)
+	#		process_raw(data, socket_buffer)
+	#	except usb.core.USBError as e:
+	#		if str(e) == "[Errno 110] Operation timed out":
+	#			print "Timed Out"
+	#			continue
+	#		else:
+	#			raise ValueError("Couldn't Read From Device: %s" % str(e))
 
-		#Break out of program on interrupt
-		except KeyboardInterrupt:
-			print "\nProgram Killed"
-			sys.exit()
+	#	#Break out of program on interrupt
+	#	except KeyboardInterrupt:
+	#		print "\nProgram Killed"
+	#		sys.exit()
+	temp_packet = [14, 0, 0, 0, 188, 127, 255, 191, 0, 153, 25, 255, 7, 1]
+	temp_packet = [14, 0, 0, 0, 188, 127, 255, 191, 0, 10, 70, 153, 25, 1]
+	process_raw(temp_packet, socket_buffer)
 	
 	##Single Read
 	#try:
