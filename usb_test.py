@@ -15,6 +15,7 @@ import threading
 import signal
 import random
 import getpass
+import math
 
 
 #Global socket data write buffer
@@ -148,8 +149,8 @@ class Client(threading.Thread):
 				for item in socket_buffer_tmp:
 					send_str += item
 				self.client.send(send_str[:-1])
-				#socket_buffer = []
-				#send_str = ""
+				socket_buffer = []
+				send_str = ""
                 elif data == 'Done':
                     self.server.server_shutdown()
                     running = 0
@@ -165,9 +166,8 @@ class Client(threading.Thread):
 ##############################################################################
 
 def convert_current(num):
-	#ret = num
-	ret = (num/65535.0)*1000
-	return ret
+	return (num/65535.0)*1000
+	#return 2.319*(math.e**((-.7434))
 
 
 # Data key for wired mouse:
@@ -312,9 +312,14 @@ def main(argc, argv):
 	s = Server()
 	s.start()
 	
+	i = 0
 	while True:
-		temp_packet = [14, 0, 0, 0, 188, 127, 255, 191, 0, 10, 70, 153, 25, 1]
-		process_raw(temp_packet)
+		if i == 10000000:
+			temp_packet = [14, 0, 0, 0, 188, 127, 255, 191, 0, 10, 70, 153, 25, 1]
+			process_raw(temp_packet)
+			i = 0
+		else:
+			i += 1
 	
 	#while True:
 	#for i in range(0,10):
