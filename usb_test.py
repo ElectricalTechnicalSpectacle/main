@@ -33,8 +33,9 @@ def get_buffer():
 	global socket_buffer
 	return socket_buffer
 
-class Server:
+class Server(threading.Thread):
     def __init__(self):
+        threading.Thread.__init__(self)
         self.host = HOST
         self.port = PORT
         self.conn = (self.host, self.port)
@@ -60,7 +61,7 @@ class Server:
                 self.server.close()
             print >> sys.stderr, "Could not open socket: " + str(message)
             sys.exit(1)
-        self.register_signals()
+        #self.register_signals()
 
     def signal_handler(self, signum, frame):
         print "Caught signal: ", signum
@@ -262,112 +263,12 @@ def main(argc, argv):
 	ST_interface = IFCE_NUM		#device information, overwritten with object
 	ST_endpoint_wr = EP_ADDR_WR	#address if found
 	ST_endpoint_rd = EP_ADDR_RD	#
-
-
-	#Find usb device
-	#device = usb.core.find(idVendor=vendor_id, idProduct=product_id)
-	#if device == None:
-	#	raise ValueError("USB Device Not Found")
-	#else:
-	#	print "Device found: Vendor ID =", "0x%0.4x" % vendor_id,", 0x%0.4x" % product_id
-	#
-	##Get config, interface, endpoint
-	#try:
-	#	for cfg in device:
-	#		if cfg.iConfiguration == ST_config:
-	#			ST_config = cfg
-	#		for ifce in cfg:
-	#			if ifce.bInterfaceNumber == ST_interface:
-	#				ST_interface = ifce
-	#			for ep in ifce:
-	#				if ep.bEndpointAddress == ST_endpoint_wr:
-	#					ST_endpoint_wr = ep
-	#				if ep.bEndpointAddress == ST_endpoint_rd:
-	#					ST_endpoint_rd = ep
-	#	if (ST_config == CFG_NUM) or \
-	#	   (ST_interface == IFCE_NUM) or \
-	#	   (ST_endpoint_wr == EP_ADDR_WR) or \
-	#	   (ST_endpoint_rd == EP_ADDR_RD):
-	#		raise Exception
-	#	print "Got config", ST_config.iConfiguration, \
-	#	       ", interface", ST_interface.bInterfaceNumber, \
-	#	       ", write endpoint", ST_endpoint_wr.bEndpointAddress, \
-	#	       ", read endpoint", ST_endpoint_rd.bEndpointAddress
-	#
-	#except:
-	#	print "Couldn't get device config, interface, endpoint"
-	#	sys.exit(1)
-
-	##check driver status
-	#if device.is_kernel_driver_active(ST_interface.bInterfaceNumber):
-	#	try:
-	#		device.detach_kernel_driver(ST_interface.bInterfaceNumber)
-	#		print "Driver Detached"
-	#	except usb.core.USBError as e:
-	#		raise ValueError("Couldn't Detach Driver %s" % str(e))
-	#else:
-	#	print "Driver Inactive"
-
-	#Start server
+	
 	s = Server()
-	s.run()
+	s.start()
 	
-	while True:
-		temp_packet = [14, 0, 0, 0, 188, 127, 255, 191, 0, 10, 70, 153, 25, 1]
-		process_raw(temp_packet)
-	
-	#while True:
-	#for i in range(0,10):
-
-	#	#Signal STmicro for data
-	#	try:
-	#		send_data = b'\x04\x0c\x00\x00'
-	#		ST_endpoint_wr.write(send_data)
-	#	except usb.core.USBError as e:
-	#		raise ValueError("Couldn't Write To Device: %s" % str(e))
-	#
-	#	#Read data from STmicro
-	#	try:
-	#		data = ST_endpoint_rd.read(204) #read 204 bytes (max number of samples)
-	#		process_raw(data, socket_buffer)
-	#	except usb.core.USBError as e:
-	#		if str(e) == "[Errno 110] Operation timed out":
-	#			print "Timed Out"
-	#			continue
-	#		else:
-	#			raise ValueError("Couldn't Read From Device: %s" % str(e))
-
-	#	#Break out of program on interrupt
-	#	except KeyboardInterrupt:
-	#		print "\nProgram Killed"
-	#		sys.exit()
-
-
-	#i = 0
-	#while True:
-	#	if i == 100000:
-	#		temp_packet = [14, 0, 0, 0, 188, 127, 255, 191, 0, 10, 70, 153, 25, 1]
-	#		process_raw(temp_packet)
-	#	else:
-	#		i += 1
-	
-	##Single Read
-	#try:
-	#	send_data = b'\x04\x0c\x00\x00'
-	#	#device.write(ST_endpoint_wr.bEndpointAddress, send_data, ST_interface.bInterfaceNumber)
-	#	ST_endpoint_wr.write(send_data)
-	#except usb.core.USBError as e:
-	#	raise ValueError("Couldn't Write To Device: %s" % str(e))
-	#
-	#try:
-        #	#data = device.read(ST_endpoint_wr.bEndpointAddress, ST_endpoint.wMaxPacketSize, ST_interface.bInterfaceNumber)
-	#	data = ST_endpoint_rd.read(ST_endpoint_rd.wMaxPacketSize)
-        #	process_raw(data)
-        #except usb.core.USBError as e:
-        #	if str(e) == "[Errno 110] Operation timed out":
-        #		print "Timed Out"
-        #	else:
-        #		raise ValueError("Couldn't Read From Device: %s" % str(e))
+	temp_packet = [14, 0, 0, 0, 188, 127, 255, 191, 0, 10, 70, 153, 25, 1]
+	process_raw(temp_packet)
 
 	
 if __name__ == "__main__":
