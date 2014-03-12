@@ -166,8 +166,8 @@ class Client(threading.Thread):
 ##############################################################################
 
 def convert_current(num):
-	return (num/65535.0)*1000
-	#return 2.319*(math.e**((-.7434))
+	#return (num/65535.0)*1000
+	return (2.319*(math.e**((-.7434)*num*7.6295*(10**(-5))))/2.5)*1000
 
 
 # Data key for wired mouse:
@@ -315,8 +315,10 @@ def main(argc, argv):
 	i = 0
 	while True:
 		if i == 10000000:
-			temp_packet = [14, 0, 0, 0, 188, 127, 255, 191, 0, 10, 70, 153, 25, 1]
+			temp_packet = [14, 0, 0, 0, 188, 127, 163, 14, 0, 10, 70, 104, 153, 1]
 			process_raw(temp_packet)
+			print socket_buffer
+			socket_buffer = []
 			i = 0
 		else:
 			i += 1
