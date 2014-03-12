@@ -6,8 +6,6 @@
 # Program to implement usb transfer between beaglebone and stmicro
 #
 
-
-
 import sys
 #import usb.core
 import subprocess
@@ -18,125 +16,149 @@ import signal
 import random
 import getpass
 
+
+#Global socket data write buffer
+socket_buffer = []
+
+
 #################################################################################
 ###################### SOCKET STUFF #############################################
 #################################################################################
-#PORT =      59481
-#HOST =      '127.0.0.1'
-#BACKLOG =   5
-#BUFF =      2048
-#
-#class Server:
-#    def __init__(self):
-#        self.host = HOST
-#        self.port = PORT
-#        self.conn = (self.host, self.port)
-#        self.backlog = BACKLOG
-#        self.server = None
-#        self.threads = []
-#        self.clients = []
-#
-#    def register_signals(self):
-#        signal.signal(signal.SIGHUP, self.signal_handler)
-#        signal.signal(signal.SIGINT, self.signal_handler)
-#        signal.signal(signal.SIGQUIT, self.signal_handler)
-#
-#    def open_socket(self):
-#        try:
-#            self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-#            self.server.bind(self.conn)
-#            self.server.listen(self.backlog)
-#            print "Started server: " + str(self.host) + " on port: " + str(self.port)
-#            print "Listening for incoming connections..."
-#        except socket.error as message:
-#            if self.server:
-#                self.server.close()
-#            print >> sys.stderr, "Could not open socket: " + str(message)
-#            sys.exit(1)
-#        self.register_signals()
-#
-#    def signal_handler(self, signum, frame):
-#        print "Caught signal: ", signum
-#        print "Closing the socket and cleaning up the mess..."
-#        self.server_shutdown()
-#
-#    def server_shutdown(self):
-#        self.running = 0
-#        for c in self.threads:
-#            try:
-#                c.join()
-#            except RuntimeError:
-#                pass
-#        if self.server:
-#            self.server.close()
-#        sys.exit(1)
-#
-#    def run(self):
-#        self.open_socket()
-#        inputs = [self.server, sys.stdin]
-#        self.running = 1
-#        while self.running:
-#            try:
-#                iready, oready, eready = select.select(inputs, [], [])
-#            except select.error, err:
-#                self.running = 0
-#                pass
-#            for s in iready:
-#                if s == self.server:
-#                    try:
-#                        c = Client(self, self.server.accept())
-#                        c.start()
-#                        self.threads.append(c)
-#                    except socket.error, err:
-#                        pass
-#
-#                elif s == sys.stdin:
-#                    junk = sys.stdin.readline()
-#                    self.running = 0 
-#
-#                else:
-#                    self.running = 0
-#
-#        # close all threads
-#        print 'Closing....'
-#        for c in self.threads:
-#            c.join()
-#        self.server_shutdown()
-#
-#
-#class Client(threading.Thread):
-#    def __init__(self, server, (client, address)):
-#        threading.Thread.__init__(self)
-#        self.client = client
-#        self.address = address
-#        self.server = server
-#
-#    def run(self):
-#    	print "Incoming connection from : " + str(self.address)
-#        running = 1
-#        while running:
-#            data = self.client.recv(BUFF)
-#            if data:
-#                if data == 'Hello':
-#                    self.client.send("Hello back")
-#
-#                elif data == 'Test':
-#                    num_1 = str(random.randint(1, 99999))
-#                    num_2 = str(random.randint(1, 10)).rjust(2, '0')
-#                    unit = random.choice(['mW', 'W', 'KW', 'MW']);
-#                    full =  "|".join([num_1, num_2, unit])
-#                    self.client.send(full)
-#
-#                elif data == 'Done':
-#                    self.server.server_shutdown()
-#                    running = 0
-#            else:
-#                running = 0
-#        
-#        self.client.close()
-#    
-#    def __repr__(self):
-#        return str(self.address)
+PORT =      59481
+HOST =      '127.0.0.1'
+BACKLOG =   5
+BUFF =      2048
+
+def get_buffer():
+	global socket_buffer
+	return socket_buffer
+
+class Server:
+    def __init__(self):
+        self.host = HOST
+        self.port = PORT
+        self.conn = (self.host, self.port)
+        self.backlog = BACKLOG
+        self.server = None
+        self.threads = []
+        self.clients = []
+
+    def register_signals(self):
+        signal.signal(signal.SIGHUP, self.signal_handler)
+        signal.signal(signal.SIGINT, self.signal_handler)
+        signal.signal(signal.SIGQUIT, self.signal_handler)
+
+    def open_socket(self):
+        try:
+            self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.server.bind(self.conn)
+            self.server.listen(self.backlog)
+            print "Started server: " + str(self.host) + " on port: " + str(self.port)
+            print "Listening for incoming connections..."
+        except socket.error as message:
+            if self.server:
+                self.server.close()
+            print >> sys.stderr, "Could not open socket: " + str(message)
+            sys.exit(1)
+        self.register_signals()
+
+    def signal_handler(self, signum, frame):
+        print "Caught signal: ", signum
+        print "Closing the socket and cleaning up the mess..."
+        self.server_shutdown()
+
+    def server_shutdown(self):
+        self.running = 0
+        for c in self.threads:
+            try:
+                c.join()
+            except RuntimeError:
+                pass
+        if self.server:
+            self.server.close()
+        sys.exit(1)
+
+    def run(self):
+	global socket_buffer
+        self.open_socket()
+        inputs = [self.server, sys.stdin]
+        self.running = 1
+        while self.running:
+            try:
+                iready, oready, eready = select.select(inputs, [], [])
+            except select.error, err:
+                self.running = 0
+                pass
+            for s in iready:
+                if s == self.server:
+                    try:
+                        c = Client(self, self.server.accept())
+                        c.start()
+                        self.threads.append(c)
+                    except socket.error, err:
+                        pass
+
+                elif s == sys.stdin:
+                    junk = sys.stdin.readline()
+                    self.running = 0 
+
+                else:
+                    self.running = 0
+
+        # close all threads
+        print 'Closing....'
+        for c in self.threads:
+            c.join()
+        self.server_shutdown()
+
+
+class Client(threading.Thread):
+    def __init__(self, server, (client, address)):
+        threading.Thread.__init__(self)
+        self.client = client
+        self.address = address
+        self.server = server
+
+    def run(self):
+	#global socket_buffer
+	send_str = ""
+    	print "Incoming connection from : " + str(self.address)
+        running = 1
+        while running:
+            data = self.client.recv(BUFF)
+            if data:
+                if data == 'Hello':
+                    self.client.send("Hello back")
+
+                elif data == 'Test':
+                    num_1 = str(random.randint(1, 99999))
+                    num_2 = str(random.randint(1, 99)).rjust(2, '0')
+                    unit = random.choice(['mW', 'W', 'KW', 'MW']);
+                    full =  "|".join([num_1, num_2, unit])
+                    self.client.send(full)
+                    
+                elif data == 'get':
+			socket_buffer_tmp = get_buffer()
+			print socket_buffer_tmp
+			if len(socket_buffer_tmp) == 0:
+				self.client.send("empty")
+			else:
+				send_str = str(len(socket_buffer_tmp)) + "|"
+				for item in socket_buffer_tmp:
+					send_str += item
+				self.client.send(send_str[:-1])
+				#socket_buffer = []
+				#send_str = ""
+                elif data == 'Done':
+                    self.server.server_shutdown()
+                    running = 0
+            else:
+                running = 0
+        
+        self.client.close()
+    
+    def __repr__(self):
+        return str(self.address)
 ##############################################################################
 ##############################################################################
 ##############################################################################
@@ -157,9 +179,10 @@ def convert_current(num):
 # |      1 Byte       |     1 Byte      |  1 Byte   |  1 Byte   |   2 Byte    |   2 Byte    |     1 Byte      |
 # |   Packet Length   |   Packet Type   |   Sum 1   |   Sum 2   |   Voltage   |   Current   |   Power State   |
 #
-def process_raw(packet, wr_buf):
+def process_raw(packet):
 	#Local variables
 	NACK = 1
+	global socket_buffer
 
 	#try:
 	length = int(packet[0])
@@ -173,7 +196,8 @@ def process_raw(packet, wr_buf):
 	check_1 = int(packet[2])	#Checksums not needed, only here to keep the
 	check_2 = int(packet[3])	#numbers in order
 
-	string = str(num_readings) + "|"
+	#string = str(num_readings) + "|"
+	string = ""
 	for i in range(0, num_readings):
 		#parse raw fields
 		idx = i * 5 + 4
@@ -213,7 +237,7 @@ def process_raw(packet, wr_buf):
 	#except:
 	#	print "Error: Invalid Packet"
 
-	wr_buf.append(string[:-1])		 
+	socket_buffer.append(string)		 
 
 
 def main(argc, argv):
@@ -225,7 +249,7 @@ def main(argc, argv):
 		sys.exit(0)
 
 	#variables
-	socket_buffer = []
+	global socket_buffer
 
 	vendor_id = 0x1268	#stmicro board
 	product_id = 0xfffe	#stmicro board
@@ -284,9 +308,13 @@ def main(argc, argv):
 	#else:
 	#	print "Driver Inactive"
 
-	##Start server
-	#s = Server()
-	#s.run()
+	#Start server
+	s = Server()
+	s.run()
+	
+	while True:
+		temp_packet = [14, 0, 0, 0, 188, 127, 255, 191, 0, 10, 70, 153, 25, 1]
+		process_raw(temp_packet)
 	
 	#while True:
 	#for i in range(0,10):
@@ -313,13 +341,15 @@ def main(argc, argv):
 	#	except KeyboardInterrupt:
 	#		print "\nProgram Killed"
 	#		sys.exit()
-	print socket_buffer
 
-	temp_packet = [14, 0, 0, 0, 188, 127, 255, 191, 0, 10, 70, 153, 25, 1]
-	process_raw(temp_packet, socket_buffer)
-	process_raw(temp_packet, socket_buffer)
 
-	print socket_buffer
+	#i = 0
+	#while True:
+	#	if i == 100000:
+	#		temp_packet = [14, 0, 0, 0, 188, 127, 255, 191, 0, 10, 70, 153, 25, 1]
+	#		process_raw(temp_packet)
+	#	else:
+	#		i += 1
 	
 	##Single Read
 	#try:
