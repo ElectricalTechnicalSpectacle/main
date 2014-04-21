@@ -233,9 +233,9 @@ def process_raw(packet):
 			 "mA" + "&" + \
 			 str(int(power)) + "," + \
 			 str(power-int(power))[2:4] + "," + \
-			 "mW" + "~" #TODO: DELETE THIS WHEN POWER STATE THING IS FUNCTIONAL
-			 #"mW" + "&" + \
-			 #str(pwr_state) + "~"
+			 "mW" + "&" + \
+			 str(pwr_state) + "~"
+			 #"mW" + "~" 		
 			 
 		#test print
 		#print "Packet Length:    " + str(length) + "\n" + \
@@ -336,23 +336,32 @@ def main(argc, argv):
 	#		i += 1
 	
 	while True:
-	#for i in range(0,10):
+	#for i in range(0,1):
 
 		#Signal STmicro for data
 		try:
-			send_data = b'\x04\x0c\x00\x00'
+			#send_data = b'\x04\x0c\x00\x00' #read one
+			send_data = b'\x04\x0d\x00\x00' #read all
 			ST_endpoint_wr.write(send_data)
 		except usb.core.USBError as e:
 			raise ValueError("Couldn't Write To Device: %s" % str(e))
 	
 		#Read data from STmicro
 		try:
-			data = ST_endpoint_rd.read(204) #read 204 bytes (max number of samples)
+			#data = ST_endpoint_rd.read(204) #read 204 bytes (max number of samples)
+			data = ST_endpoint_rd.read(2048) 
+			print data
 			process_raw(data)
+			print "Processed data"
+			break
 		except usb.core.USBError as e:
 			if str(e) == "[Errno 110] Operation timed out":
 				print "Timed Out"
 				continue
+			elif str(e) == "[Errno 75] Overflow":
+			#	print "Overflow"
+			#	continue
+				raise
 			else:
 				raise ValueError("Couldn't Read From Device: %s" % str(e))
 
