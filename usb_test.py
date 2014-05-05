@@ -16,10 +16,14 @@ import signal
 import random
 import getpass
 import math
+import usb_header #for current lookup table
 
 
 #Global socket data write buffer
 socket_buffer = []
+
+#global lookup table for current value matchings
+current_lookup = usb_header.lookup_table
 
 
 #################################################################################
@@ -43,8 +47,7 @@ class Server(threading.Thread):
         self.backlog = BACKLOG
         self.server = None
         self.threads = []
-        self.clients = []
-
+        self.clients = [] 
     def register_signals(self):
         signal.signal(signal.SIGHUP, self.signal_handler)
         signal.signal(signal.SIGINT, self.signal_handler)
@@ -196,6 +199,7 @@ def process_raw(packet):
 	#Local variables
 	NACK = 1
 	global socket_buffer
+	global current_lookup
 
 	#try:
 	length = int(packet[0])
@@ -220,7 +224,7 @@ def process_raw(packet):
 
 		#convert raw data
 		v_conv = (voltage/65200.0)*12.0
-		i_conv = convert_current(current)
+		i_conv = current_lookup[current]
 		power = v_conv * i_conv
 
 		#build the string
