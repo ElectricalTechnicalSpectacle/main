@@ -254,7 +254,25 @@ def process_raw(packet):
 	#except:
 	#	print "Error: Invalid Packet"
 
+	print string
 	socket_buffer.append(string)		 
+
+
+def usb_init(wr_ep, rd_ep):
+	send_data = b'\x04\x0c\x00\x00' #read one
+
+	# do two reads to throw away inital garbage packets
+	for i in range(0,2):
+		try:
+			wr_ep.write(send_data)
+		except usb.core.USBError as e:
+			raise ValueError("Couldn't Write To Device In Init: %s" % str(e))
+
+		try:
+			data = rd_ep.read(4096) 
+		except usb.core.USBError as e:
+			raise ValueError("Couldn't Read From Device In Init: %s" % str(e))
+
 
 
 def main(argc, argv):
@@ -267,6 +285,11 @@ def main(argc, argv):
 
 	#variables
 	global socket_buffer
+
+	#code to tell stmicro what to do
+	send_data = b'\x04\x0c\x00\x00' #read one
+	#send_data = b'\x04\x0d\x00\x00' #read all
+	#send_data = b'\x04\x0e\x00\x00' #test case read
 
 	vendor_id = 0x1268	#stmicro board
 	product_id = 0xfffe	#stmicro board
@@ -338,15 +361,15 @@ def main(argc, argv):
 	#		i = 0
 	#	else:
 	#		i += 1
+
+	#grab and toss out the first two readings
+	usb_init(ST_endpoint_wr, ST_endpoint_rd)
 	
 	while True:
 	#for i in range(0,1):
 
 		#Signal STmicro for data
 		try:
-			#send_data = b'\x04\x0c\x00\x00' #read one
-			send_data = b'\x04\x0d\x00\x00' #read all
-			#send_data = b'\x04\x0e\x00\x00' #test case read
 			ST_endpoint_wr.write(send_data)
 		except usb.core.USBError as e:
 			raise ValueError("Couldn't Write To Device: %s" % str(e))
@@ -356,17 +379,17 @@ def main(argc, argv):
 			#data = ST_endpoint_rd.read(204) #read 204 bytes (max number of samples)
 			data = ST_endpoint_rd.read(4096) 
 			print data
-			#process_raw(data)
+			process_raw(data)
 			#print "Processed data"
-			break
+			#break
 		except usb.core.USBError as e:
 			if str(e) == "[Errno 110] Operation timed out":
 				print "Timed Out"
 				continue
 			elif str(e) == "[Errno 75] Overflow":
-			#	print "Overflow"
-			#	continue
-				raise
+				print "Overflow"
+				continue
+				#raise
 			else:
 				raise ValueError("Couldn't Read From Device: %s" % str(e))
 
