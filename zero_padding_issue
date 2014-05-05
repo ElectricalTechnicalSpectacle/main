@@ -1,0 +1,11 @@
+debian@arm:~/usb$ sudo ./usb_test.py 
+Device found: Vendor ID = 0x1268 , 0xfffe
+Got config 0 , interface 2 , write endpoint 3 , read endpoint 131
+Driver Inactive
+Started server: 127.0.0.1 on port: 59481
+Listening for incoming connections...
+array('B', [29, 0, 8, 8, 1, 2, 0, 0, 3, 4, 0, 0, 5, 0, 0, 0, 1, 2, 0, 0, 3, 4, 0, 0, 5, 0, 0, 0, 1, 4, 0, 8, 8, 4, 0, 8, 8, 4, 0, 8, 8, 4, 0, 8, 8, 4, 0, 8, 8, 4, 0, 8, 8, 4, 0, 8, 8, 4, 0, 8, 8, 4, 0, 8, 8, 4, 0, 8, 8, 4, 0, 8, 8, 4, 0, 8, 8, 4, 0, 8, 8, 4, 0, 8, 8, 4, 0, 8, 8, 4, 0, 8, 8, 4, 0, 8, 8, 4, 0, 8, 8, 4, 0, 8, 8, 4, 0, 8, 8, 4, 0, 8, 8])
+Processed data
+
+Closing....
+debian@arm:~/usb$ 

@@ -214,8 +214,8 @@ def process_raw(packet):
 	for i in range(0, num_readings):
 		#parse raw fields
 		idx = i * 5 + 4
-		voltage = ((int(packet[idx+1]) << 8) | int(packet[idx]))
-		current = ((int(packet[idx+3]) << 8) | int(packet[idx+2]))
+		current = ((int(packet[idx+1]) << 8) | int(packet[idx]))
+		voltage = ((int(packet[idx+3]) << 8) | int(packet[idx+2]))
 		pwr_state = int(packet[idx+4])
 
 		#convert raw data
@@ -342,6 +342,7 @@ def main(argc, argv):
 		try:
 			#send_data = b'\x04\x0c\x00\x00' #read one
 			send_data = b'\x04\x0d\x00\x00' #read all
+			#send_data = b'\x04\x0e\x00\x00' #test case read
 			ST_endpoint_wr.write(send_data)
 		except usb.core.USBError as e:
 			raise ValueError("Couldn't Write To Device: %s" % str(e))
@@ -349,10 +350,10 @@ def main(argc, argv):
 		#Read data from STmicro
 		try:
 			#data = ST_endpoint_rd.read(204) #read 204 bytes (max number of samples)
-			data = ST_endpoint_rd.read(2048) 
+			data = ST_endpoint_rd.read(4096) 
 			print data
-			process_raw(data)
-			print "Processed data"
+			#process_raw(data)
+			#print "Processed data"
 			break
 		except usb.core.USBError as e:
 			if str(e) == "[Errno 110] Operation timed out":
