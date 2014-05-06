@@ -224,8 +224,19 @@ def process_raw(packet):
 
 		#convert raw data
 		v_conv = (voltage/65200.0)*12.0
-		i_conv = current_lookup[current]
+		i_conv = current_lookup[current] + 1
 		power = v_conv * i_conv
+
+		#account for sense resistor voltage drop
+		if (i_conv > 500):
+			v_conv -= 0.05
+		elif (i_conv > 100 and i_conv <= 500):
+			v_conv -= 0.025
+		elif (i_conv <= 100):
+			v_conv -= 0.0125
+		
+		if (v_conv < 6):
+			v_conv -= 0.01
 
 		#build the string
 		string = string + \
