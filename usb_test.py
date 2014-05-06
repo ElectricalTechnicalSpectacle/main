@@ -202,26 +202,19 @@ def process_raw(packet):
 	global socket_buffer
 	global current_lookup
 
-	#try:
-	length = int(packet[0])
-	num_readings = (length - 4) / 5
-	pkt_type = int(packet[1])
-	if pkt_type == NACK:
-		#Handle nack appropriately 
+	if int(packet[1]) == NACK:
 		print "Packet was a NACK"
 		return
 
-	check_1 = int(packet[2])	#Checksums not needed, only here to keep the
-	check_2 = int(packet[3])	#numbers in order
-
-	#string = str(num_readings) + "|"
+	#string to send through socket
 	string = ""
-	for i in range(0, num_readings):
-		#parse raw fields
-		idx = i * 5 + 4
+
+	#grab first 40 readings from first sub-packet
+	for i in range(0, 40):
+		idx = i * 6 + 4
 		current = ((int(packet[idx+1]) << 8) | int(packet[idx]))
 		voltage = ((int(packet[idx+3]) << 8) | int(packet[idx+2]))
-		pwr_state = int(packet[idx+4])
+		pwr_state = int(packet[idx+4]) #idx+5 not needed, always 0
 
 		#convert raw data
 		v_conv = (voltage/65200.0)*12.0
@@ -251,23 +244,116 @@ def process_raw(packet):
 			 str(power-int(power))[2:4] + "," + \
 			 "mW" + "&" + \
 			 str(pwr_state) + "~"
-			 #"mW" + "~" 		
-			 
-		#test print
-		#print "Packet Length:    " + str(length) + "\n" + \
-		#      "Number Values:    " + str(num_readings) + "\n" + \
-		#      "Packet Type:      " + str(pkt_type) + "\n" + \
-		#      "Checksum 1:       " + str(check_1) + "\n" + \
-		#      "Checksum 2:       " + str(check_2) + "\n" + \
-		#      "Current Reading:  " + str(i_conv) + "\n" + \
-		#      "Voltage Reading:  " + str(v_conv) + "\n" + \
-		#      "Power Reading:    " + str(power) + "\n" + \
-		#      "DUT Power State:  " + str(pwr_state) + "\n"
-	#except:
-	#	print "Error: Invalid Packet"
 
+	#grab second 40 readings from second sub-packet
+	for i in range(0, 40):
+		idx = i * 6 + 248
+		current = ((int(packet[idx+1]) << 8) | int(packet[idx]))
+		voltage = ((int(packet[idx+3]) << 8) | int(packet[idx+2]))
+		pwr_state = int(packet[idx+4]) #idx+5 not needed, always 0
+
+		#convert raw data
+		v_conv = (voltage/65200.0)*12.0
+		i_conv = current_lookup[current] + 1
+		power = v_conv * i_conv
+
+		#account for sense resistor voltage drop
+		if (i_conv > 500):
+			v_conv -= 0.05
+		elif (i_conv > 100 and i_conv <= 500):
+			v_conv -= 0.025
+		elif (i_conv <= 100):
+			v_conv -= 0.0125
+		
+		if (v_conv < 6):
+			v_conv -= 0.01
+
+		#build the string
+		string = string + \
+			 str(int(v_conv)) + "," + \
+			 str(v_conv-int(v_conv))[2:4] + "," + \
+			 "V" + "&" + \
+			 str(int(i_conv)) + "," + \
+			 str(i_conv-int(i_conv))[2:4] + "," + \
+			 "mA" + "&" + \
+			 str(int(power)) + "," + \
+			 str(power-int(power))[2:4] + "," + \
+			 "mW" + "&" + \
+			 str(pwr_state) + "~"
+
+	#grab third 39 readings from third sub-packet
+	for i in range(0, 39):
+		idx = i * 6 + 492
+		current = ((int(packet[idx+1]) << 8) | int(packet[idx]))
+		voltage = ((int(packet[idx+3]) << 8) | int(packet[idx+2]))
+		pwr_state = int(packet[idx+4]) #idx+5 not needed, always 0
+
+		#convert raw data
+		v_conv = (voltage/65200.0)*12.0
+		i_conv = current_lookup[current] + 1
+		power = v_conv * i_conv
+
+		#account for sense resistor voltage drop
+		if (i_conv > 500):
+			v_conv -= 0.05
+		elif (i_conv > 100 and i_conv <= 500):
+			v_conv -= 0.025
+		elif (i_conv <= 100):
+			v_conv -= 0.0125
+		
+		if (v_conv < 6):
+			v_conv -= 0.01
+
+		#build the string
+		string = string + \
+			 str(int(v_conv)) + "," + \
+			 str(v_conv-int(v_conv))[2:4] + "," + \
+			 "V" + "&" + \
+			 str(int(i_conv)) + "," + \
+			 str(i_conv-int(i_conv))[2:4] + "," + \
+			 "mA" + "&" + \
+			 str(int(power)) + "," + \
+			 str(power-int(power))[2:4] + "," + \
+			 "mW" + "&" + \
+			 str(pwr_state) + "~"
+
+	#grab last reading from fourth sub-packet
+	idx = i * 6 +730 
+	current = ((int(packet[idx+1]) << 8) | int(packet[idx]))
+	voltage = ((int(packet[idx+3]) << 8) | int(packet[idx+2]))
+	pwr_state = int(packet[idx+4]) #idx+5 not needed, always 0
+
+	#convert raw data
+	v_conv = (voltage/65200.0)*12.0
+	i_conv = current_lookup[current] + 1
+	power = v_conv * i_conv
+
+	#account for sense resistor voltage drop
+	if (i_conv > 500):
+		v_conv -= 0.05
+	elif (i_conv > 100 and i_conv <= 500):
+		v_conv -= 0.025
+	elif (i_conv <= 100):
+		v_conv -= 0.0125
+	
+	if (v_conv < 6):
+		v_conv -= 0.01
+
+	#build the string
+	string = string + \
+		 str(int(v_conv)) + "," + \
+		 str(v_conv-int(v_conv))[2:4] + "," + \
+		 "V" + "&" + \
+		 str(int(i_conv)) + "," + \
+		 str(i_conv-int(i_conv))[2:4] + "," + \
+		 "mA" + "&" + \
+		 str(int(power)) + "," + \
+		 str(power-int(power))[2:4] + "," + \
+		 "mW" + "&" + \
+		 str(pwr_state) + "~"
+	
 	print string
-	socket_buffer.append(string)		 
+	#socket_buffer.append(string) 
 
 
 def usb_init(wr_ep, rd_ep):
