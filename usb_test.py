@@ -17,6 +17,7 @@ import random
 import getpass
 import math
 import usb_header #for current lookup table
+import time
 
 
 #Global socket data write buffer
@@ -281,6 +282,7 @@ def usb_init(wr_ep, rd_ep):
 
 		try:
 			data = rd_ep.read(4096) 
+			print data
 		except usb.core.USBError as e:
 			raise ValueError("Couldn't Read From Device In Init: %s" % str(e))
 
@@ -298,8 +300,8 @@ def main(argc, argv):
 	global socket_buffer
 
 	#code to tell stmicro what to do
-	send_data = b'\x04\x0c\x00\x00' #read one
-	#send_data = b'\x04\x0d\x00\x00' #read all
+	#send_data = b'\x04\x0c\x00\x00' #read one
+	send_data = b'\x04\x0d\x00\x00' #read all
 	#send_data = b'\x04\x0e\x00\x00' #test case read
 
 	vendor_id = 0x1268	#stmicro board
@@ -374,8 +376,9 @@ def main(argc, argv):
 	#		i += 1
 
 	#grab and toss out the first two readings
-	usb_init(ST_endpoint_wr, ST_endpoint_rd)
+	#usb_init(ST_endpoint_wr, ST_endpoint_rd)
 	
+	test_count = 0
 	while True:
 	#for i in range(0,1):
 
@@ -390,7 +393,9 @@ def main(argc, argv):
 			#data = ST_endpoint_rd.read(204) #read 204 bytes (max number of samples)
 			data = ST_endpoint_rd.read(4096) 
 			print data
-			process_raw(data)
+			#test_count += 1
+			#print test_count, time.time()
+			#process_raw(data)
 			#print "Processed data"
 			#break
 		except usb.core.USBError as e:
