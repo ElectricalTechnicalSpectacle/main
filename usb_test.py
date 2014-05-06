@@ -202,158 +202,164 @@ def process_raw(packet):
 	global socket_buffer
 	global current_lookup
 
-	if int(packet[1]) == NACK:
-		print "Packet was a NACK"
+	try:
+		if int(packet[1]) == NACK:
+			print "Packet was a NACK"
+			return
+
+		#string to send through socket
+		string = ""
+
+		#grab first 40 readings from first sub-packet
+		for i in range(0, 40):
+			idx = i * 6 + 4
+			current = ((int(packet[idx+1]) << 8) | int(packet[idx]))
+			voltage = ((int(packet[idx+3]) << 8) | int(packet[idx+2]))
+			pwr_state = int(packet[idx+4]) #idx+5 not needed, always 0
+
+			#convert raw data
+			v_conv = (voltage/65200.0)*12.0
+			i_conv = current_lookup[current] + 1
+			power = v_conv * i_conv
+
+			#account for sense resistor voltage drop
+			if (i_conv > 500):
+				v_conv -= 0.05
+			elif (i_conv > 100 and i_conv <= 500):
+				v_conv -= 0.025
+			elif (i_conv <= 100):
+				v_conv -= 0.0125
+			
+			if (v_conv < 6):
+				v_conv -= 0.01
+
+			#build the string
+			string = string + \
+				 str(int(v_conv)) + "," + \
+				 str(v_conv-int(v_conv))[2:4] + "," + \
+				 "V" + "&" + \
+				 str(int(i_conv)) + "," + \
+				 str(i_conv-int(i_conv))[2:4] + "," + \
+				 "mA" + "&" + \
+				 str(int(power)) + "," + \
+				 str(power-int(power))[2:4] + "," + \
+				 "mW" + "&" + \
+				 str(pwr_state) + "~"
+
+		#grab second 40 readings from second sub-packet
+		for i in range(0, 40):
+			idx = i * 6 + 248
+			current = ((int(packet[idx+1]) << 8) | int(packet[idx]))
+			voltage = ((int(packet[idx+3]) << 8) | int(packet[idx+2]))
+			pwr_state = int(packet[idx+4]) #idx+5 not needed, always 0
+
+			#convert raw data
+			v_conv = (voltage/65200.0)*12.0
+			i_conv = current_lookup[current] + 1
+			power = v_conv * i_conv
+
+			#account for sense resistor voltage drop
+			if (i_conv > 500):
+				v_conv -= 0.05
+			elif (i_conv > 100 and i_conv <= 500):
+				v_conv -= 0.025
+			elif (i_conv <= 100):
+				v_conv -= 0.0125
+			
+			if (v_conv < 6):
+				v_conv -= 0.01
+
+			#build the string
+			string = string + \
+				 str(int(v_conv)) + "," + \
+				 str(v_conv-int(v_conv))[2:4] + "," + \
+				 "V" + "&" + \
+				 str(int(i_conv)) + "," + \
+				 str(i_conv-int(i_conv))[2:4] + "," + \
+				 "mA" + "&" + \
+				 str(int(power)) + "," + \
+				 str(power-int(power))[2:4] + "," + \
+				 "mW" + "&" + \
+				 str(pwr_state) + "~"
+
+		#grab third 39 readings from third sub-packet
+		for i in range(0, 39):
+			idx = i * 6 + 492
+			current = ((int(packet[idx+1]) << 8) | int(packet[idx]))
+			voltage = ((int(packet[idx+3]) << 8) | int(packet[idx+2]))
+			pwr_state = int(packet[idx+4]) #idx+5 not needed, always 0
+
+			#convert raw data
+			v_conv = (voltage/65200.0)*12.0
+			i_conv = current_lookup[current] + 1
+			power = v_conv * i_conv
+
+			#account for sense resistor voltage drop
+			if (i_conv > 500):
+				v_conv -= 0.05
+			elif (i_conv > 100 and i_conv <= 500):
+				v_conv -= 0.025
+			elif (i_conv <= 100):
+				v_conv -= 0.0125
+			
+			if (v_conv < 6):
+				v_conv -= 0.01
+
+			#build the string
+			string = string + \
+				 str(int(v_conv)) + "," + \
+				 str(v_conv-int(v_conv))[2:4] + "," + \
+				 "V" + "&" + \
+				 str(int(i_conv)) + "," + \
+				 str(i_conv-int(i_conv))[2:4] + "," + \
+				 "mA" + "&" + \
+				 str(int(power)) + "," + \
+				 str(power-int(power))[2:4] + "," + \
+				 "mW" + "&" + \
+				 str(pwr_state) + "~"
+
+		#grab last reading from fourth sub-packet
+		idx = i * 6 +730 
+		current = ((int(packet[idx+1]) << 8) | int(packet[idx]))
+		voltage = ((int(packet[idx+3]) << 8) | int(packet[idx+2]))
+		pwr_state = int(packet[idx+4]) #idx+5 not needed, always 0
+
+		#convert raw data
+		v_conv = (voltage/65200.0)*12.0
+		i_conv = current_lookup[current] + 1
+		power = v_conv * i_conv
+
+		#account for sense resistor voltage drop
+		if (i_conv > 500):
+			v_conv -= 0.05
+		elif (i_conv > 100 and i_conv <= 500):
+			v_conv -= 0.025
+		elif (i_conv <= 100):
+			v_conv -= 0.0125
+		
+		if (v_conv < 6):
+			v_conv -= 0.01
+
+		#build the string
+		string = string + \
+			 str(int(v_conv)) + "," + \
+			 str(v_conv-int(v_conv))[2:4] + "," + \
+			 "V" + "&" + \
+			 str(int(i_conv)) + "," + \
+			 str(i_conv-int(i_conv))[2:4] + "," + \
+			 "mA" + "&" + \
+			 str(int(power)) + "," + \
+			 str(power-int(power))[2:4] + "," + \
+			 "mW" + "&" + \
+			 str(pwr_state) + "~"
+		
+		#print string
+		socket_buffer.append(string) 
+
+	except:
+		print "Bad packet"
+		print packet
 		return
-
-	#string to send through socket
-	string = ""
-
-	#grab first 40 readings from first sub-packet
-	for i in range(0, 40):
-		idx = i * 6 + 4
-		current = ((int(packet[idx+1]) << 8) | int(packet[idx]))
-		voltage = ((int(packet[idx+3]) << 8) | int(packet[idx+2]))
-		pwr_state = int(packet[idx+4]) #idx+5 not needed, always 0
-
-		#convert raw data
-		v_conv = (voltage/65200.0)*12.0
-		i_conv = current_lookup[current] + 1
-		power = v_conv * i_conv
-
-		#account for sense resistor voltage drop
-		if (i_conv > 500):
-			v_conv -= 0.05
-		elif (i_conv > 100 and i_conv <= 500):
-			v_conv -= 0.025
-		elif (i_conv <= 100):
-			v_conv -= 0.0125
-		
-		if (v_conv < 6):
-			v_conv -= 0.01
-
-		#build the string
-		string = string + \
-			 str(int(v_conv)) + "," + \
-			 str(v_conv-int(v_conv))[2:4] + "," + \
-			 "V" + "&" + \
-			 str(int(i_conv)) + "," + \
-			 str(i_conv-int(i_conv))[2:4] + "," + \
-			 "mA" + "&" + \
-			 str(int(power)) + "," + \
-			 str(power-int(power))[2:4] + "," + \
-			 "mW" + "&" + \
-			 str(pwr_state) + "~"
-
-	#grab second 40 readings from second sub-packet
-	for i in range(0, 40):
-		idx = i * 6 + 248
-		current = ((int(packet[idx+1]) << 8) | int(packet[idx]))
-		voltage = ((int(packet[idx+3]) << 8) | int(packet[idx+2]))
-		pwr_state = int(packet[idx+4]) #idx+5 not needed, always 0
-
-		#convert raw data
-		v_conv = (voltage/65200.0)*12.0
-		i_conv = current_lookup[current] + 1
-		power = v_conv * i_conv
-
-		#account for sense resistor voltage drop
-		if (i_conv > 500):
-			v_conv -= 0.05
-		elif (i_conv > 100 and i_conv <= 500):
-			v_conv -= 0.025
-		elif (i_conv <= 100):
-			v_conv -= 0.0125
-		
-		if (v_conv < 6):
-			v_conv -= 0.01
-
-		#build the string
-		string = string + \
-			 str(int(v_conv)) + "," + \
-			 str(v_conv-int(v_conv))[2:4] + "," + \
-			 "V" + "&" + \
-			 str(int(i_conv)) + "," + \
-			 str(i_conv-int(i_conv))[2:4] + "," + \
-			 "mA" + "&" + \
-			 str(int(power)) + "," + \
-			 str(power-int(power))[2:4] + "," + \
-			 "mW" + "&" + \
-			 str(pwr_state) + "~"
-
-	#grab third 39 readings from third sub-packet
-	for i in range(0, 39):
-		idx = i * 6 + 492
-		current = ((int(packet[idx+1]) << 8) | int(packet[idx]))
-		voltage = ((int(packet[idx+3]) << 8) | int(packet[idx+2]))
-		pwr_state = int(packet[idx+4]) #idx+5 not needed, always 0
-
-		#convert raw data
-		v_conv = (voltage/65200.0)*12.0
-		i_conv = current_lookup[current] + 1
-		power = v_conv * i_conv
-
-		#account for sense resistor voltage drop
-		if (i_conv > 500):
-			v_conv -= 0.05
-		elif (i_conv > 100 and i_conv <= 500):
-			v_conv -= 0.025
-		elif (i_conv <= 100):
-			v_conv -= 0.0125
-		
-		if (v_conv < 6):
-			v_conv -= 0.01
-
-		#build the string
-		string = string + \
-			 str(int(v_conv)) + "," + \
-			 str(v_conv-int(v_conv))[2:4] + "," + \
-			 "V" + "&" + \
-			 str(int(i_conv)) + "," + \
-			 str(i_conv-int(i_conv))[2:4] + "," + \
-			 "mA" + "&" + \
-			 str(int(power)) + "," + \
-			 str(power-int(power))[2:4] + "," + \
-			 "mW" + "&" + \
-			 str(pwr_state) + "~"
-
-	#grab last reading from fourth sub-packet
-	idx = i * 6 +730 
-	current = ((int(packet[idx+1]) << 8) | int(packet[idx]))
-	voltage = ((int(packet[idx+3]) << 8) | int(packet[idx+2]))
-	pwr_state = int(packet[idx+4]) #idx+5 not needed, always 0
-
-	#convert raw data
-	v_conv = (voltage/65200.0)*12.0
-	i_conv = current_lookup[current] + 1
-	power = v_conv * i_conv
-
-	#account for sense resistor voltage drop
-	if (i_conv > 500):
-		v_conv -= 0.05
-	elif (i_conv > 100 and i_conv <= 500):
-		v_conv -= 0.025
-	elif (i_conv <= 100):
-		v_conv -= 0.0125
-	
-	if (v_conv < 6):
-		v_conv -= 0.01
-
-	#build the string
-	string = string + \
-		 str(int(v_conv)) + "," + \
-		 str(v_conv-int(v_conv))[2:4] + "," + \
-		 "V" + "&" + \
-		 str(int(i_conv)) + "," + \
-		 str(i_conv-int(i_conv))[2:4] + "," + \
-		 "mA" + "&" + \
-		 str(int(power)) + "," + \
-		 str(power-int(power))[2:4] + "," + \
-		 "mW" + "&" + \
-		 str(pwr_state) + "~"
-	
-	print string
-	#socket_buffer.append(string) 
 
 
 def usb_init(wr_ep, rd_ep):
@@ -368,7 +374,7 @@ def usb_init(wr_ep, rd_ep):
 
 		try:
 			data = rd_ep.read(4096) 
-			print data
+			#print data
 		except usb.core.USBError as e:
 			raise ValueError("Couldn't Read From Device In Init: %s" % str(e))
 
@@ -478,10 +484,10 @@ def main(argc, argv):
 		try:
 			#data = ST_endpoint_rd.read(204) #read 204 bytes (max number of samples)
 			data = ST_endpoint_rd.read(4096) 
-			print data
+			#print data
 			#test_count += 1
-			#print test_count, time.time()
-			#process_raw(data)
+			print test_count, time.time()
+			process_raw(data)
 			#print "Processed data"
 			#break
 		except usb.core.USBError as e:
