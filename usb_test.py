@@ -224,7 +224,7 @@ def process_raw(packet):
 
 		#convert raw data
 		v_conv = (voltage/65200.0)*12.0
-		i_conv = current_lookup[current] - 2
+		i_conv = current_lookup[current]
 		power = v_conv * i_conv
 
 		#account for sense resistor voltage drop
@@ -237,8 +237,9 @@ def process_raw(packet):
 		
 		if (v_conv < 6):
 			v_conv -= 0.01
-
-		v_conv -= 0.05
+		if (v_conv > 4):
+			v_conv -= 0.03
+		#v_conv -= 0.05
 
 		#build the string
 		string = string + \
@@ -267,7 +268,7 @@ def process_raw(packet):
 	#except:
 	#	print "Error: Invalid Packet"
 
-	print string
+	#print string
 	socket_buffer.append(string)		 
 
 
@@ -294,6 +295,9 @@ def main(argc, argv):
 	if getpass.getuser() != "root":
 		print "Current user: " + getpass.getuser()
 		print "Please run script as root user"
+		fd = open("/home/debian/Desktop/testfile", r+)
+		fd.write("poop")
+		fd.close()
 		sys.exit(0)
 
 	#variables
@@ -391,7 +395,7 @@ def main(argc, argv):
 		try:
 			#data = ST_endpoint_rd.read(204) #read 204 bytes (max number of samples)
 			data = ST_endpoint_rd.read(4096) 
-			print data
+			#print data
 			process_raw(data)
 			#print "Processed data"
 			#break
